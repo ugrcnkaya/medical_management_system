@@ -2,8 +2,6 @@
 from . import db  # current folder : call db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-
-
 from sqlalchemy import Column, DECIMAL, Date, DateTime, ForeignKey, Integer, String, TIMESTAMP, Table, Time, text
 from sqlalchemy.dialects.mysql import INTEGER, VARCHAR
 from sqlalchemy.orm import relationship
@@ -23,11 +21,6 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(150))
     notes = db.relationship('Note')
 
-
-
-
-Base = declarative_base()
-metadata = Base.metadata
 
 
 class Disease(db.Model):
