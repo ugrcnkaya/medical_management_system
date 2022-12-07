@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import path
+from flask_login import LoginManager
 
 #database
 
@@ -14,11 +15,9 @@ def create_app():
     app.config['SECRET_KEY'] = 'SECRETKEY'
     app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://doadmin:AVNS_sADnTRke7m5xdFsODkz@db-srh-sdp-do-user-12936967-0.b.db.ondigitalocean.com:25060/{DB_NAME}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
     db.init_app(app)
 
     # blueprints
-
     from .views import  views
     from .auth import  auth
     # prefix for views within the blueprints
@@ -27,6 +26,14 @@ def create_app():
 
     from .models import User, Note
     create_database(app)
+
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(id):
+        return User.query.get(int(id))
 
     return app
 
