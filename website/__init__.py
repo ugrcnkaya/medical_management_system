@@ -7,7 +7,7 @@ from datetime import timedelta
 #database
 
 db = SQLAlchemy()
-DB_NAME = "defaultdb"
+DB_NAME = "prod"
 
 
 def create_app():
