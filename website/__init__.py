@@ -6,7 +6,7 @@ from flask_login import LoginManager #manage user sessions
 #database
 
 db = SQLAlchemy()
-DB_NAME = "defaultdb"
+DB_NAME = "prod"
 
 
 def create_app():
