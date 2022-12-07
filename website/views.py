@@ -12,8 +12,6 @@ def home():
     if check_session():
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
-
-
         return render_template("profile.html", patient=user)
     else:
         return redirect(url_for('auth.login'))
