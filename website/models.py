@@ -7,6 +7,7 @@ from sqlalchemy.dialects.mysql import INTEGER, VARCHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
+from flask_login import login_user
 
 class Disease(db.Model):
     __tablename__ = 'Diseases'

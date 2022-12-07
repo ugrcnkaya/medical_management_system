@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from .models import Patient
 from . import db
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -16,6 +16,8 @@ def login():
             if check_password_hash(patient.Password, password):
                 flash('logged in successfully: '+ patient.E_Mail, category="success")
                 print("success")
+                session.permanent = True
+                session['Patient_ID'] = patient.Patient_ID
                 return redirect(url_for('views.home'))
             else:
                 print("fail")
@@ -26,6 +28,7 @@ def login():
 
 @auth.route('/logout')
 def logout():
+    session.pop("Patient_ID", None)
     return redirect(url_for('auth.login'))
 
 @auth.route('/sign_up', methods= ['GET', 'POST'])
@@ -59,7 +62,6 @@ def sign_up():
                                   Name=firstName,
                                   Surname=lastName,
                                   Birthdate=birthDate,
-
                                   Password=generate_password_hash(password1, method='sha256'))
             db.session.add(new_patient)
             db.session.commit()
@@ -69,4 +71,10 @@ def sign_up():
 
     return render_template("sign_up.html", patient=False)
 
+
+def check_session():
+    if session.get("Patient_ID"):
+        return True
+    else:
+        return False
 
