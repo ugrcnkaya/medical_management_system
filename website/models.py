@@ -7,21 +7,6 @@ from sqlalchemy.dialects.mysql import INTEGER, VARCHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-class Note(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String(10000))
-    date = db.Column(db.DateTime(timezone=True), default=func.now())
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(150), unique=True)
-    password = db.Column(db.String(150))
-    first_name = db.Column(db.String(150))
-    notes = db.relationship('Note')
-
-
 
 class Disease(db.Model):
     __tablename__ = 'Diseases'
@@ -38,7 +23,7 @@ class Medicine(db.Model):
     Barcode = Column(String(120))
 
 
-class Patient(db.Model):
+class Patient(db.Model, UserMixin):
     __tablename__ = 'Patients'
 
     Patient_ID = Column(Integer, primary_key=True)
