@@ -1,9 +1,7 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from .models import User
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from .models import Patient
 from . import db
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_login import login_user, login_required, logout_user, current_user
-
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods = ['GET', 'POST'])
@@ -11,23 +9,25 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
+        patient = Patient.query.filter_by(E_Mail=email).first()
 
-        if user:
-            if check_password_hash(user.password, password):
-                flash('logged in successfully: '+ user.first_name, category="success")
-                login_user(user, remember=True)
+        if patient:
+            if check_password_hash(patient.Password, password):
+                flash('logged in successfully: '+ patient.E_Mail, category="success")
+                print("success")
+                session.permanent = True
+                session['Patient_ID'] = patient.Patient_ID
                 return redirect(url_for('views.home'))
             else:
+                print("fail")
                 flash('Error logging in', category="error")
 
             # text = argument to send towards the template
-    return render_template("login.html", user= current_user)
+    return render_template("login.html")
 
 @auth.route('/logout')
-@login_required
 def logout():
-    logout_user()
+    session.pop("Patient_ID", None)
     return redirect(url_for('auth.login'))
 
 @auth.route('/sign_up', methods= ['GET', 'POST'])
@@ -35,33 +35,41 @@ def sign_up():
     if request.method == 'POST':
         email = request.form.get('email')
         firstName = request.form.get('firstName')
+        lastName = request.form.get('lastName')
+        phone = request.form.get('phone')
+        birthDate = request.form.get('birthdate')
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
-        user = User.query.filter_by(email=email).first()
-        if user:
+        patient = Patient.query.filter_by(E_Mail=email).first()
+        if patient:
             flash('Email already exists.', category='error')
-
-        if len(email)  < 4:
+        elif len(email)  < 4:
             flash('E-Mail must be greater than 3 characters.', category='error')
-
         elif len(firstName) < 2:
             flash('First name must be greater than 1 characters.', category='error')
-
         elif password1 != password2:
             flash('Passwords don\'t match', category='error')
-
         elif len(password1) < 7:
             flash('Password must be at least 7 characters.', category='error')
-
         else:
-            new_user = User(email=email, first_name=firstName, password=generate_password_hash(password1, method='sha256'))
-            db.session.add(new_user)
+            new_patient = Patient(E_Mail=email,
+                                  Name=firstName,
+                                  Surname=lastName,
+                                  Birthdate=birthDate,
+                                  Password=generate_password_hash(password1, method='sha256'))
+            db.session.add(new_patient)
             db.session.commit()
+            session['Patient_ID'] = new_patient.Patient_ID
             flash('User is created.', category='success')
-            login_user(new_user, remember=True)
             return redirect(url_for('views.home')) ##blueprint
 
 
-    return render_template("sign_up.html", user=current_user)
+    return render_template("sign_up.html")
 
+
+def check_session():
+    if session.get("Patient_ID"):
+        return True
+    else:
+        return False
 
