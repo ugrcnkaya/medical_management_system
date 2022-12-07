@@ -22,7 +22,7 @@ def login():
                 flash('Error logging in', category="error")
 
             # text = argument to send towards the template
-    return render_template("login.html", boolean= False)
+    return render_template("login.html", user= current_user)
 
 @auth.route('/logout')
 @login_required
@@ -60,8 +60,8 @@ def sign_up():
             flash('User is created.', category='success')
             login_user(new_user, remember=True)
             return redirect(url_for('views.home')) ##blueprint
-          
 
-    return render_template("sign_up.html")
+
+    return render_template("sign_up.html", user=current_user)
 
 
