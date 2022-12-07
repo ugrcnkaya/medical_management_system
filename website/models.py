@@ -33,7 +33,7 @@ class Patient(db.Model, UserMixin):
     Birthdate = Column(DateTime)
     Photo = Column(String(255))
     Password = Column(String(255))
-    E_Mail = Column(String(255))
+    E_Mail = Column(String(255), unique = True)
     Status = Column(INTEGER)
 
 

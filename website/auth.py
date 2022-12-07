@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from .models import Patient
 from . import db
 from werkzeug.security import generate_password_hash,check_password_hash
-
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods = ['GET', 'POST'])
@@ -24,7 +23,7 @@ def login():
                 flash('Error logging in', category="error")
 
             # text = argument to send towards the template
-    return render_template("login.html", patient= False)
+    return render_template("login.html")
 
 @auth.route('/logout')
 def logout():
@@ -44,19 +43,14 @@ def sign_up():
         patient = Patient.query.filter_by(E_Mail=email).first()
         if patient:
             flash('Email already exists.', category='error')
-
-        if len(email)  < 4:
+        elif len(email)  < 4:
             flash('E-Mail must be greater than 3 characters.', category='error')
-
         elif len(firstName) < 2:
             flash('First name must be greater than 1 characters.', category='error')
-
         elif password1 != password2:
             flash('Passwords don\'t match', category='error')
-
         elif len(password1) < 7:
             flash('Password must be at least 7 characters.', category='error')
-
         else:
             new_patient = Patient(E_Mail=email,
                                   Name=firstName,
@@ -65,11 +59,12 @@ def sign_up():
                                   Password=generate_password_hash(password1, method='sha256'))
             db.session.add(new_patient)
             db.session.commit()
+            session['Patient_ID'] = new_patient.Patient_ID
             flash('User is created.', category='success')
             return redirect(url_for('views.home')) ##blueprint
 
 
-    return render_template("sign_up.html", patient=False)
+    return render_template("sign_up.html")
 
 
 def check_session():

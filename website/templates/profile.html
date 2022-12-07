@@ -9,7 +9,7 @@
              <div class="col-lg-8">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Name Surname - Age  - ID: {{ patient }}</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">{{ patient.Name }} {{ patient.Surname }} - {{ patient.Birthdate }}  - ID: {{ patient.Patient_ID }} </h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -25,11 +25,11 @@
                                     <tbody>
                                         <tr>
                                             <td>E-Mail:</td>
-                                            <td>e-mail@google.com</td>
+                                            <td>{{ patient.E_Mail }}</td>
                                         </tr>
                                         <tr>
                                             <td>Phone Number:</td>
-                                            <td>+49 151239283</td>
+                                            <td>{{ patient.Phone }}</td>
                                         </tr>
                                         <tr>
                                             <td>ID Number:</td>

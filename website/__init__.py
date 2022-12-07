@@ -3,10 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from os import path
 from datetime import timedelta
 
+
 #database
 
 db = SQLAlchemy()
-DB_NAME = "prod"
+DB_NAME = "defaultdb"
 
 
 def create_app():

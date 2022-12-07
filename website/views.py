@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from .models import Patient
 from . import db
 import json
+from .models import Patient
 from .auth import check_session
 views = Blueprint('views', __name__)
 
@@ -10,7 +11,10 @@ views = Blueprint('views', __name__)
 def home():
     if check_session():
         patientID = session["Patient_ID"]
-        return render_template("profile.html", patient=patientID)
+        user = Patient.query.filter_by(Patient_ID=patientID).first()
+
+
+        return render_template("profile.html", patient=user)
     else:
         return redirect(url_for('auth.login'))
 
