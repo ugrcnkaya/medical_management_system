@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from os import path
-from flask_login import LoginManager #manage user sessions
+from datetime import timedelta
+
 
 #database
 
@@ -16,7 +17,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://doadmin:AVNS_sADnTRke7m5xdFsODkz@db-srh-sdp-do-user-12936967-0.b.db.ondigitalocean.com:25060/{DB_NAME}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
-
+    app.permanent_session_lifetime = timedelta(days=5)
     # blueprints - routes
     from .views import  views
     from .auth import  auth
@@ -24,17 +25,11 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User, Note
+    from .models import Patient
     create_database(app)
 
-    ##session settings
-    login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'
-    login_manager.init_app(app)
 
-    @login_manager.user_loader
-    def load_user(id):
-        return User.query.get(int(id))
+
 
     return app
 
