@@ -1,8 +1,17 @@
-function deleteNote(noteId) {
-  fetch("/delete-note", {
+
+//cancel an appointment
+function cancelAppointment(Appointment_ID) {
+  fetch("/cancel-appointment", {
     method: "POST",
-    body: JSON.stringify({ noteId: noteId }),
+    body: JSON.stringify({ Appointment_ID: Appointment_ID }),
   }).then((_res) => {
-    window.location.href = "/";
+    window.location.href = "/appointments";
   });
 }
+
+
+
+// Call the dataTables jQuery plugin
+$(document).ready(function() {
+  $('#dataTable').DataTable();
+});
