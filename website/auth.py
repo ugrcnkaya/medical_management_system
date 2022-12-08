@@ -6,11 +6,12 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods = ['GET', 'POST'])
 def login():
+    if check_session() != False:
+        return redirect(url_for('views.home'))
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
         patient = Patient.query.filter_by(E_Mail=email).first()
-
         if patient:
             if check_password_hash(patient.Password, password):
                 flash('logged in successfully: '+ patient.E_Mail, category="success")
