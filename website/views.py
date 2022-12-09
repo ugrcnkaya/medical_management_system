@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -13,19 +13,56 @@ views = Blueprint('views', __name__)
 
 @views.route('/', methods=['GET', 'POST'])
 def home():
-    if check_session():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
         return render_template("profile.html", patient=user)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+        doctorID = session["Staff_ID"]
+        doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
+        return render_template("staff_profile.html", staff=doctor, patient= None)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
+        email = session["Admin_E-Mail"]
+        system_admin = SystemConfig.query.filter_by(Admin_E_Mail=email).first()
+        return render_template("admin.html", staff=None, patient=None, admin=system_admin)
     else:
         return redirect(url_for('auth.login'))
+
+##staff route
+@views.route('/staff', methods=['GET', 'POST'])
+def staff():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+        #patientID = session["Patient_ID"]
+       # user = Patient.query.filter_by(Patient_ID=patientID).first()
+        return redirect(url_for('views.home'))
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+        doctorID = session["Staff_ID"]
+        doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
+        return render_template("staff_profile.html", staff=doctor, patient= None)
+    else:
+        return redirect(url_for('views.home'))
+
+
+#admin
+
+@views.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
+
+        return render_template("admin.html", staff=None, patient=None, admin=True)
+    else:
+        return redirect(url_for('auth.login'))
+
+
+
+
 
 
 ##appointment views-controls
 
 @views.route('/appointments', methods=['GET', 'POST'])
 def appointments():
-    if check_session() and request.method != 'POST':
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient" and request.method != 'POST':
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
 
@@ -58,7 +95,7 @@ def appointments():
 
 @views.route('/cancel-appointment', methods = ['POST'])
 def cancel_appointment():
-    if check_session():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
         appointment = json.loads(request.data)
         appointmentID = appointment['Appointment_ID']
 
@@ -83,7 +120,7 @@ def cancel_appointment():
 
 @views.route('/list_appointments', methods = ['GET'])
 def list_appointments():
-    if check_session():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
         if request.args.get("Specification_ID") != None:
             spec_id = request.args.get("Specification_ID")
             staffs = HospitalStaff.query.filter_by(Specification_ID = spec_id).all()
