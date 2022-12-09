@@ -110,7 +110,7 @@ class Invoice(db.Model):
 class AvailabilitySchedule(db.Model):
     __tablename__ = 'Availability_Schedule'
 
-    Schedule_ID = Column(INTEGER, primary_key=True)
+    Schedule_ID = Column(INTEGER, primary_key=True,autoincrement=True)
     Schedule_Date = Column(Date)
     Slot_ID = Column(ForeignKey('Time_Slots.Slot_ID', ondelete='RESTRICT'), nullable=False, index=True)
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), nullable=False, index=True)
