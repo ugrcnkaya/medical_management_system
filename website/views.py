@@ -73,18 +73,11 @@ def insert_availability():
         time_slot = request.form.get('Time_Slots')
         room_id = request.form.get('room')
         staff = session.get("Staff_ID")
-        print(date, time_slot, room_id)
+        ## insert it into database
         new_availability = AvailabilitySchedule(Schedule_Date=date, Slot_ID = time_slot, Staff_ID = staff,Room_ID = room_id)
         db.session.add(new_availability)
         db.session.commit()
         flash('Schedule is set!', category='success')
-
-
-
-       # new_appointment = Appointment(Schedule_ID=schedule_id, Patient_ID=patient_id, Type=type, Status=1)
-      #  db.session.add(new_appointment)
-      #  db.session.commit()
-      #  flash('Appointment is set!', category='success')
         return redirect(url_for('views.schedule'))
     else:
         return redirect(url_for('views.home'))
