@@ -1,12 +1,13 @@
 ##routes for website
+import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule
 from .auth import check_session
 from sqlalchemy import text
-
-
+from sqlalchemy.sql import func
+from datetime import datetime
 
 views = Blueprint('views', __name__)
 
@@ -69,7 +70,17 @@ def list_appointments():
             spec_id = request.args.get("Specification_ID")
             staffs = HospitalStaff.query.filter_by(Specification_ID = spec_id).all()
             all_staff = [{'id': staf_members.Staff_ID, 'name': staf_members.Name + " " + staf_members.Surname} for staf_members in staffs]
-        return jsonify(all_staff)
+            return jsonify(all_staff)
+
+        if request.args.get("Doctor_ID") != None:
+            doctor_id = request.args.get("Doctor_ID")
+            sql = text("SELECT 	Schedule_ID,CONCAT(CONCAT(DATE_FORMAT(Schedule_Date, '%d/%m/%Y'), ' ', DATE_FORMAT(Start_Time, '%H:%i')), ' - ', DATE_FORMAT(End_Time, '%H:%i')) as Slot FROM V_Available_Slots Where Doctor_ID = " + str(doctor_id))
+            available_slots = db.engine.execute(sql)
+            all_slots = [{'id' :str(slot.Schedule_ID), 'date':slot.Slot} for slot in available_slots]
+            return jsonify(all_slots)
+
+
+
     else:
         return redirect(url_for('auth.login'))
 
