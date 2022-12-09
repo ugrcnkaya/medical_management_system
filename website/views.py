@@ -57,13 +57,39 @@ def schedule():
                                 Staff_ID = doctorID).all()
         sql = text("select * from V_Appointments WHERE Staff_ID = " + str(doctorID))
         appointments = db.engine.execute(sql)
-
-
-
-
         return render_template("schedule.html", staff=doctor, patient= None, appointments=appointments, schedules=schedules)
     else:
         return redirect(url_for('views.home'))
+
+
+#create availability slot
+@views.route('/insert_availability', methods=['POST'])
+def insert_availability():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+       if request.method == 'POST':
+           #data validation required
+        date = request.form.get('date')
+        date = (datetime.strptime(date,"%d/%m/%Y"))
+        time_slot = request.form.get('Time_Slots')
+        room_id = request.form.get('room')
+        staff = session.get("Staff_ID")
+        print(date, time_slot, room_id)
+        new_availability = AvailabilitySchedule(Schedule_Date=date, Slot_ID = time_slot, Staff_ID = staff,Room_ID = room_id)
+        db.session.add(new_availability)
+        db.session.commit()
+        flash('Schedule is set!', category='success')
+
+
+
+       # new_appointment = Appointment(Schedule_ID=schedule_id, Patient_ID=patient_id, Type=type, Status=1)
+      #  db.session.add(new_appointment)
+      #  db.session.commit()
+      #  flash('Appointment is set!', category='success')
+        return redirect(url_for('views.schedule'))
+    else:
+        return redirect(url_for('views.home'))
+
+
 
 
 
@@ -94,7 +120,7 @@ def appointments():
         sql = text("select * from V_Appointments WHERE Patient_ID = " + str(patientID))
         appointments = db.engine.execute(sql)
 
-        ## create appointment part : required objects -> pass
+
         specifications = Specification.query.all()
 
         return render_template("appointments.html", patient=user, appointments=appointments, specifications = specifications)
@@ -179,11 +205,9 @@ def list_time_slots():
 @views.route('/list_rooms', methods = ['GET'])
 def list_rooms():
     if check_session()["Logged_In"] != False:
-
         rooms = Room.query.all()
         all_slots = [{'id': str(slot.Room_ID), 'desc': "Type: (" + slot.Type + ") (Building: " + slot.Building + ") Room: (" + slot.Room + ")"} for slot in rooms]
         return jsonify(all_slots)
-
     else:
         return redirect(url_for('auth.login'))
 
