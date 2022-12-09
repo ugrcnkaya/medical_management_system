@@ -20,9 +20,12 @@ def home():
     else:
         return redirect(url_for('auth.login'))
 
+
+##appointment views-controls
+
 @views.route('/appointments', methods=['GET', 'POST'])
 def appointments():
-    if check_session():
+    if check_session() and request.method != 'POST':
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
 
@@ -34,6 +37,21 @@ def appointments():
         specifications = Specification.query.all()
 
         return render_template("appointments.html", patient=user, appointments=appointments, specifications = specifications)
+
+    elif request.method == 'POST':
+        schedule_id = request.form.get('date')
+
+        patient_id = session["Patient_ID"]
+        type = "Visit"
+
+        new_appointment = Appointment(Schedule_ID = schedule_id, Patient_ID = patient_id, Type= type, Status = 1)
+        db.session.add(new_appointment)
+        db.session.commit()
+        flash('Appointment is set!', category='success')
+        return  redirect(url_for('views.appointments'))
+
+
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -78,11 +96,10 @@ def list_appointments():
             available_slots = db.engine.execute(sql)
             all_slots = [{'id' :str(slot.Schedule_ID), 'date':slot.Slot} for slot in available_slots]
             return jsonify(all_slots)
-
-
-
     else:
         return redirect(url_for('auth.login'))
+
+
 
 
 
