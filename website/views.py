@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -21,24 +21,42 @@ def home():
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
         return render_template("staff_profile.html", staff=doctor, patient= None)
-
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
+        email = session["Admin_E-Mail"]
+        system_admin = SystemConfig.query.filter_by(Admin_E_Mail=email).first()
+        return render_template("admin.html", staff=None, patient=None, admin=system_admin)
     else:
         return redirect(url_for('auth.login'))
 
-
+##staff route
 @views.route('/staff', methods=['GET', 'POST'])
 def staff():
     if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
-        patientID = session["Patient_ID"]
-        user = Patient.query.filter_by(Patient_ID=patientID).first()
-        return render_template("profile.html", patient=user)
+        #patientID = session["Patient_ID"]
+       # user = Patient.query.filter_by(Patient_ID=patientID).first()
+        return redirect(url_for('views.home'))
     elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
         return render_template("staff_profile.html", staff=doctor, patient= None)
+    else:
+        return redirect(url_for('views.home'))
 
+
+#admin
+
+@views.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
+
+        return render_template("admin.html", staff=None, patient=None, admin=True)
     else:
         return redirect(url_for('auth.login'))
+
+
+
+
+
 
 ##appointment views-controls
 
