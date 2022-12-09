@@ -4,16 +4,8 @@
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
 {% endblock %}
 {% block content %}
-
-
-
-
-
-
-
-                    <!-- Page Heading -->
+                    <!-- List Appointments -->
                     <h1 class="h3 mb-4 text-gray-800">Appointments</h1>
- <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Appointments</h6>
@@ -70,6 +62,64 @@
                         </div>
                     </div>
 
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Create Appointment</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Appointment Form -->
+
+                            <form>
+  <div class="form-group">
+    <label for="Specification">Specification</label>
+        <select id="specification" name="specification" id="specification" class="form-control">
+            <option selected value="0">Choose...</option>
+ {% for specify in specifications %}
+ <option value="{{ specify.Specification_ID }}">{{ specify.Title }}</option>
+{% endfor %}
+
+
+
+
+        </select>
+      <hr>
+   <!-- <small id="emailHelp" class="form-text text-muted">Small Note.</small> -->
+      <label for="Doctor">Doctor</label>
+        <select id="doctor" name="doctor" class="form-control">
+         <option selected>Choose...</option>
+         <option>...</option>
+        </select>
+ <hr>
+      <label for="date">Date:</label>
+        <select id="date" name="date" class="form-control">
+         <option selected>Choose...</option>
+         <option>...</option>
+        </select>
+ <hr>
+      <label for="time">Time</label>
+        <select id="time" name="time" class="form-control">
+         <option selected>Choose...</option>
+         <option>...</option>
+        </select>
+
+
+
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+
+
 
 {% endblock %}
 
@@ -79,4 +129,6 @@
     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
 {% endblock %}

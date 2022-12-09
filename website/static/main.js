@@ -11,6 +11,8 @@ function cancelAppointment(Appointment_ID) {
 
 
 
+
+
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
   $('#dataTable').DataTable();
