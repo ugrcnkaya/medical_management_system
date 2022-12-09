@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -41,6 +41,30 @@ def staff():
         return render_template("staff_profile.html", staff=doctor, patient= None)
     else:
         return redirect(url_for('views.home'))
+
+
+
+#availability_schedule page
+@views.route('/schedule', methods=['GET', 'POST'])
+def schedule():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+        doctorID = session["Staff_ID"]
+        doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
+
+        cancel_appointments = Appointment.query.filter_by(Status = 0).all()
+
+        schedules = AvailabilitySchedule.query.filter_by(
+                                Staff_ID = doctorID).all()
+        sql = text("select * from V_Appointments WHERE Staff_ID = " + str(doctorID))
+        appointments = db.engine.execute(sql)
+
+
+
+
+        return render_template("schedule.html", staff=doctor, patient= None, appointments=appointments, schedules=schedules)
+    else:
+        return redirect(url_for('views.home'))
+
 
 
 #admin
@@ -118,6 +142,8 @@ def cancel_appointment():
         return redirect(url_for('auth.login'))
 
 
+
+# JSON Call - List Appointments Available
 @views.route('/list_appointments', methods = ['GET'])
 def list_appointments():
     if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
@@ -135,6 +161,33 @@ def list_appointments():
             return jsonify(all_slots)
     else:
         return redirect(url_for('auth.login'))
+
+
+@views.route('/list_time_slots', methods = ['GET'])
+def list_time_slots():
+    if check_session()["Logged_In"] != False:
+
+        time_slots = TimeSlot.query.all()
+
+        all_slots = [{'id': str(slot.Slot_ID), 'time': str(slot.Start_Time.strftime('%H:%M')) + " - " + str(slot.End_Time.strftime('%H:%M')) } for slot in time_slots]
+        return jsonify(all_slots)
+
+    else:
+        return redirect(url_for('auth.login'))
+
+
+@views.route('/list_rooms', methods = ['GET'])
+def list_rooms():
+    if check_session()["Logged_In"] != False:
+
+        rooms = Room.query.all()
+        all_slots = [{'id': str(slot.Room_ID), 'desc': "Type: (" + slot.Type + ") (Building: " + slot.Building + ") Room: (" + slot.Room + ")"} for slot in rooms]
+        return jsonify(all_slots)
+
+    else:
+        return redirect(url_for('auth.login'))
+
+
 
 
 

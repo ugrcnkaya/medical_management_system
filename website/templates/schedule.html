@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+{% block head %}
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<h1 class="h3 mb-4 text-gray-800">My Schedule</h1>
+    <div class="row">
+        <div class="col-sm">
+               <!-- List Availability Schedule -->
+
+                    <div class="card shadow mb-2">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">My Appointments</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable2" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time Slot</th>
+                                            <th>Patient Name</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      {% for appointment in appointments %}
+                                        <tr>
+                                                <td>{{ appointment.Schedule_Date.strftime('%d/%m/%Y')  }}</td>
+                                                <td>{{ appointment.Start_Time  }} - {{ appointment.End_Time   }}</td>
+                                                <td>{{ appointment.Patient_Name  }}</td>
+                                                <td>
+                                                 {% if appointment.Status == 1 %}
+                                                Active
+
+                                                <button style="color:red!important;" type="button" class ="close" onClick="if(confirm('Do you want to the cancel the following appointment? \n {{ appointment.Schedule_Date.strftime('%d/%m/%Y')  }} - {{ appointment.Patient_Name }} ')) cancelAppointment({{ appointment.Appointment_ID }})">
+                                                <span aria-hidden="true">&times;</span>
+
+                                                </button>
+                                            {% elif appointment.Status == 0 %}
+                                                Cancelled
+                                            {% endif %}
+                                                </td>
+                                        </tr>
+                                         {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+
+
+    </div>
+    <div class = "row">
+     <div class="col-sm">
+               <!-- List Availability Schedule -->
+                    <div class="card shadow mb-2">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">My Schedule</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable3" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Room</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      {% for schedule in schedules %}
+                                        <tr>
+                                        <td> {{ schedule.Schedule_Date.strftime('%d/%m/%Y') }} @ {{ schedule.Time_Slot.Start_Time.strftime('%H:%M') }} - {{ schedule.Time_Slot.End_Time.strftime('%H:%M') }}</td>
+                                            <td>{{ schedule.Room.Room }}</td>
+                                        </tr>
+                                         {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+    </div>
+
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Create Schedule</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Create Availability -->
+
+                            <form method="post">
+  <div class="form-group">
+
+    <label for="Date">Date</label>
+        <input class="form-control" id="date" name="date" placeholder="dd/mm/yyyy" type="text"/>
+      <hr>
+   <!-- <small id="emailHelp" class="form-text text-muted">Small Note.</small> -->
+      <label for="Time_Slots">Time Slots</label>
+        <select id="Time_Slots" name="Time_Slots" class="form-control">
+         <option selected>Choose...</option>
+
+        </select>
+ <hr>
+      <label for="date">Room:</label>
+        <select id="room" name="room" class="form-control">
+         <option selected>Choose...</option>
+        </select>
+ <hr>
+
+
+
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+<script>
+    $(document).ready(function(){
+      var date_input=$('input[name="date"]'); //our date input has the name "date"
+      var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
+      var options={
+        format: 'dd/mm/yyyy',
+        container: container,
+        todayHighlight: true, todayBtn: "linked",
+         clearBtn: true,
+         autoclose: true,
+          todayHighlight: true,
+          startDate: '+1d',
+        autoclose: true,
+
+      };
+      date_input.datepicker(options);
+    })
+</script>
+    <!-- Bootstrap Date-Picker Plugin -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+
+{% endblock %}
