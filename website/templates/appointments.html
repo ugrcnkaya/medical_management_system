@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+{% block head %}
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+                    <!-- List Appointments -->
+                    <h1 class="h3 mb-4 text-gray-800">Appointments</h1>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Appointments</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Name</th>
+                                            <th>Specification</th>
+                                            <th>Type</th>
+                                            <th>Room</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      {% for appointment in appointments %}
+                                        <tr>
+                                        <td> {{ appointment.Schedule_Date.strftime('%d/%m/%Y') }} @ {{ appointment.Start_Time }} - {{ appointment.End_Time }}</td>
+                                            <td>{{ appointment.Staff_Name }}</td>
+                                            <td>{{ appointment.Specification }}</td>
+                                            <td>{{ appointment.Type }}</td>
+                                            <td> {{ appointment.Room }}</td>
+                                            <td>
+                                            {% if appointment.Status == 1 %}
+                                                Active
+
+                                                <button style="color:red!important;" type="button" class ="close" onClick="if(confirm('Do you want to the cancel the following appointment? \n {{ appointment.Schedule_Date.strftime('%d/%m/%Y')  }} - {{ appointment.Staff_Name }} \n  {{ appointment.Specification }} ')) cancelAppointment({{ appointment.Appointment_ID }})">
+                                                <span aria-hidden="true">&times;</span>
+
+                                                </button>
+                                            {% elif appointment.Status == 0 %}
+                                                Cancelled
+                                            {% endif %}</td>
+
+
+
+
+
+
+
+
+
+
+
+                                        </tr>
+                                         {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Create Appointment</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Appointment Form -->
+
+                            <form method="post">
+  <div class="form-group">
+    <label for="Specification">Specification</label>
+        <select id="specification" name="specification" id="specification" class="form-control">
+            <option selected value="0">Choose...</option>
+ {% for specify in specifications %}
+ <option value="{{ specify.Specification_ID }}">{{ specify.Title }}</option>
+{% endfor %}
+
+
+
+
+        </select>
+      <hr>
+   <!-- <small id="emailHelp" class="form-text text-muted">Small Note.</small> -->
+      <label for="Doctor">Doctor</label>
+        <select id="doctor" name="doctor" class="form-control">
+         <option selected>Choose...</option>
+
+        </select>
+ <hr>
+      <label for="date">Date:</label>
+        <select id="date" name="date" class="form-control">
+         <option selected>Choose...</option>
+        </select>
+ <hr>
+
+
+
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+{% endblock %}

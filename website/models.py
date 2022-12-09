@@ -162,8 +162,9 @@ class Prescription(db.Model):
 class Appointment(db.Model):
     __tablename__ = 'Appointments'
 
-    Appointment_ID = Column(INTEGER, primary_key=True)
+    Appointment_ID = Column(INTEGER, primary_key=True, autoincrement=True)
     Schedule_ID = Column(ForeignKey('Availability_Schedule.Schedule_ID'), index=True)
+    Status = Column(Integer)
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
     Type = Column(String(255))
 

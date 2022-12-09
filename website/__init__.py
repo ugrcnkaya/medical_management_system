@@ -3,9 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from os import path
 from datetime import timedelta
 
+from sqlalchemy import create_engine
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import inspect
+from sqlalchemy.sql import text
+
+
 
 #database
-
 db = SQLAlchemy()
 DB_NAME = "prod"
 
