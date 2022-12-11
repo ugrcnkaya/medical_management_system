@@ -21,6 +21,7 @@
                                         <tr>
                                             <th>Date</th>
                                             <th>Time Slot</th>
+                                            <th>Building - Room</th>
                                             <th>Patient Name</th>
                                             <th>Status</th>
                                         </tr>
@@ -31,6 +32,7 @@
                                         <tr>
                                                 <td>{{ appointment.Schedule_Date.strftime('%d/%m/%Y')  }}</td>
                                                 <td>{{ appointment.Start_Time  }} - {{ appointment.End_Time   }}</td>
+                                                <td>{{ appointment.Room  }}</td>
                                                 <td>{{ appointment.Patient_Name  }}</td>
                                                 <td>
                                                  {% if appointment.Status == 1 %}
@@ -66,21 +68,36 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable3" width="100%" cellspacing="0">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
                                             <th>Date</th>
                                             <th>Room</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                       {% for schedule in schedules %}
                                         <tr>
-                                        <td> {{ schedule.Schedule_Date.strftime('%d/%m/%Y') }} @ {{ schedule.Time_Slot.Start_Time.strftime('%H:%M') }} - {{ schedule.Time_Slot.End_Time.strftime('%H:%M') }}</td>
-                                            <td>{{ schedule.Room.Room }}</td>
+                                        <td> {{ schedule.Schedule_ID }}  - {{ schedule.Schedule_Date.strftime('%d/%m/%Y') }} @ {{ schedule.Start_Time }} - {{ schedule.End_Time }}</td>
+                                            <td>{{ schedule.Building }} - {{ schedule.Room }}</td>
+
+                                               <td>
+
+                                                   <a onclick="if(confirm('Do you want to the delete the chosen time slot?')) cancelSchedule({{ schedule.Schedule_ID }})"  class="btn btn-danger btn-icon-split">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-trash"></i>
+                                        </span>
+                                        <span class="text">Delete Schedule</span>
+                                    </a>
+
+                                                </td>
+
                                         </tr>
+
                                          {% endfor %}
+
                                     </tbody>
                                 </table>
                             </div>

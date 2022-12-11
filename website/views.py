@@ -44,17 +44,51 @@ def staff():
 
 
 
+#delete schedule
+@views.route('/delete-schedule', methods = ['POST'])
+def delete_schedule():
+    if request.method == "POST" and check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        # delete schedule
+        schedule_id = json.loads(request.data)
+        schedule_id = schedule_id['Schedule_ID']
+
+        schedule = AvailabilitySchedule.query.filter_by(Schedule_ID = schedule_id).first()
+        if schedule:
+            print(schedule.Schedule_ID)
+            schedule.Status = 0
+            db.session.commit()
+    return redirect(url_for('views.schedule'))
+
+
 #availability_schedule page
 @views.route('/schedule', methods=['GET', 'POST'])
 def schedule():
-    if check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != "POST":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
 
-        cancel_appointments = Appointment.query.filter_by(Status = 0).all()
+        #only list the availables not blocked by an appointment so no conflict.
+        schedules   = ""
+        sql = text("""
+        SELECT
+                        	a.Schedule_ID ,
+                        a.Schedule_Date,
+                        c.Start_Time,
+                        c.End_Time,
+                        a.Slot_ID,
+                        a.Staff_ID,
+                        
+                        b.Room,
+                        b.Building
+                    from Availability_Schedule a
+                    JOIN
+                        Rooms b ON a.Room_ID  = b.Room_ID  
+                    JOIN 
+                        Time_Slots c ON a.Slot_ID = c.Slot_ID 
+            WHERE Status != 0 AND  Schedule_ID NOT IN (SELECT Schedule_ID from V_Appointments WHERE Status = 1 ) AND Staff_ID = """
+                    + str(doctorID))
+        schedules = db.engine.execute(sql)
 
-        schedules = AvailabilitySchedule.query.filter_by(
-                                Staff_ID = doctorID).all()
         sql = text("select * from V_Appointments WHERE Staff_ID = " + str(doctorID))
         appointments = db.engine.execute(sql)
         return render_template("schedule.html", staff=doctor, patient= None, appointments=appointments, schedules=schedules)
@@ -74,7 +108,7 @@ def insert_availability():
         room_id = request.form.get('room')
         staff = session.get("Staff_ID")
         ## insert it into database
-        new_availability = AvailabilitySchedule(Schedule_Date=date, Slot_ID = time_slot, Staff_ID = staff,Room_ID = room_id)
+        new_availability = AvailabilitySchedule(Schedule_Date=date, Slot_ID = time_slot, Staff_ID = staff,Room_ID = room_id, Status = 1)
         db.session.add(new_availability)
         db.session.commit()
         flash('Schedule is set!', category='success')
@@ -138,26 +172,35 @@ def appointments():
 
 @views.route('/cancel-appointment', methods = ['POST'])
 def cancel_appointment():
-    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+    if check_session()["Logged_In"] != False:
         appointment = json.loads(request.data)
         appointmentID = appointment['Appointment_ID']
 
         #get the appointment info first
         appointment = Appointment.query.filter_by(Appointment_ID=appointmentID).first()
         # check if this appointment is actually current patient's, (they can change javascript post id)
-        if(appointment.Patient_ID == session["Patient_ID"]):
-            #yes
+        if check_session()["Role"] == "Patient":
+            print("works here1")
+            if(appointment.Patient_ID == session["Patient_ID"]):
+                #yes
+                appointment.Status = 0
+                sql = text("UPDATE Appointments SET Status = 0 WHERE Appointment_ID = "+ str(appointment.Appointment_ID))
+
+                db.engine.execute(sql)
+
+
+        else:
+            print("works here2")
             appointment.Status = 0
-            sql = text("UPDATE Appointments SET Status = 0 WHERE Appointment_ID = "+ str(appointment.Appointment_ID))
+            sql = text("UPDATE Appointments SET Status = 0 WHERE Appointment_ID = " + str(appointment.Appointment_ID))
+            print("here")
             db.engine.execute(sql)
 
-            print("true")
-        else:
-            #he or she trying to hack us :)
-            print("false")
+
 
 
     else:
+        print("works here3")
         return redirect(url_for('auth.login'))
 
 

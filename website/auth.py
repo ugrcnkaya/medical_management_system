@@ -21,6 +21,7 @@ def login():
         if system_admin:
             if check_password_hash(system_admin.Admin_Password, password):
                 session.permanent = True
+                print("admin")
                 session['Admin_E-Mail'] = system_admin.Admin_E_Mail
                 print("Admin login successfull.")
                 return redirect(url_for('views.admin'))
@@ -28,6 +29,7 @@ def login():
             if check_password_hash(staff.Password, password):
 
                 session.permanent = True
+                print("staff")
                 session['Staff_ID'] = staff.Staff_ID
                 session['Staff_Role'] = staff.Role
                 print("Hospital staff login successfull. ")
@@ -39,14 +41,15 @@ def login():
         elif patient:
             if check_password_hash(patient.Password, password):
                 flash('logged in successfully: '+ patient.E_Mail, category="success")
-                print("success")
                 session.permanent = True
+                print("patient")
                 session['Patient_ID'] = patient.Patient_ID
                 return redirect(url_for('views.home'))
             else:
                 print("fail")
                 flash('Error logging in', category="error")
-
+        else:
+            flash('Here', category="error")
             # text = argument to send towards the template
     return render_template("login.html")
 
