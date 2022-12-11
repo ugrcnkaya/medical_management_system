@@ -71,9 +71,9 @@
 
 
 
-                  <div class="card shadow mb-4">
+                  <div class="card shadow mb-4" id="bottomPanel">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Appointments</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Active Appointments of The Patient</h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -81,14 +81,7 @@
 
 
                                     <tbody>
-                                        <tr>
-                                            <td>Date</td>
-                                            <td>Staff Name</td>
-                                            <td>Specification</td>
-                                            <td>Type</td>
-                                            <td>Room</td>
-                                            <td>Status</td>
-                                        </tr>
+
                                     </tbody>
                                 </table>
                             </div>
@@ -120,6 +113,7 @@
 
 
     $(document).ready(function(){
+        $("#bottomPanel").hide();
              $.ajax({
             type: 'GET',
             url: "/list_patients",
@@ -143,8 +137,10 @@
 
 
     $("select#patient").change(function() {
+         $("#bottomPanel").hide();
         var patientID = $(this).find('option:selected').text();
         if (patientID != "Choose...") {
+            $("#dataTable").empty();
             //var Specification = ($('#specification option:selected').text());
             var select = document.getElementById('patient');
             var value = select.options[select.selectedIndex].value;
@@ -157,25 +153,27 @@
             success: function(response) {
                  //$("#doctor").empty();
                    if (response.length > 0){
+                        $("#bottomPanel").show();
                        $("#dataTable").empty();
                        console.log(response)
-                       output  = `<thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Staff Name</th>
-                                            <th>Specification</th>
-                                            <th>Type</th>
-                                            <th>Room</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead><tr>`;
+                       output  = `  <thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Specification</td>
+
+                                            <td>Room</td>
+
+                                        </tr>   </thead>`;
                       $.each(response, function(a,b){
-                         output += "<td>"+b.date+"</td>";
-                         output += "<td>"+b.date+"</td>";
-                         output += "<td>"+b.date+"</td>";
-                         output += "<td>"+b.date+"</td>";
-                         output += "<td>"+b.date+"</td>";
-                         output += "<td>"+b.date+"</td>";
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+                             "<td>"+b.specification+"</td>" +
+                             "<td>"+b.room+"</td>" +
+
+                             "</tr>";
+
+
                    })
                        $("#dataTable").empty();
                      $("#dataTable").append(output);

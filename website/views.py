@@ -247,7 +247,7 @@ def list_appointments():
 
             sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
             all_appointments = db.engine.execute(sql)
-            all_staff = [{'id': appointment.Appointment_ID, 'staff':appointment.Staff_Name, 'date': appointment.Schedule_Date, 'start_time' : str(appointment.Start_Time), 'end_time' : str(appointment.End_Time), 'specification': appointment.Specification } for appointment in all_appointments]
+            all_staff = [{'id': appointment.Appointment_ID, 'staff':appointment.Staff_Name, 'date': datetime.strftime(appointment.Schedule_Date,"%d%/%m%/%Y"), 'start_time' : str(appointment.Start_Time), 'end_time' : str(appointment.End_Time), 'specification': appointment.Specification, 'room':appointment.Room, 'status': appointment.Status } for appointment in all_appointments]
             return jsonify(all_staff)
 
         if request.args.get("Doctor_ID") != None:
