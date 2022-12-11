@@ -16,15 +16,15 @@ def home():
     if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
-        return render_template("profile.html", patient=user)
+        return render_template("profile.html", patient=user, role="patient")
     elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
-        return render_template("staff_profile.html", staff=doctor, patient= None)
+        return render_template("staff_profile.html", staff=doctor, role = "staff")
     elif check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
         email = session["Admin_E-Mail"]
         system_admin = SystemConfig.query.filter_by(Admin_E_Mail=email).first()
-        return render_template("admin.html", staff=None, patient=None, admin=system_admin)
+        return render_template("admin.html", role="admin", admin=system_admin)
     else:
         return redirect(url_for('auth.login'))
 
@@ -38,7 +38,7 @@ def staff():
     elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
-        return render_template("staff_profile.html", staff=doctor, patient= None)
+        return render_template("staff_profile.html", role="staff", staff=doctor, patient= None)
     else:
         return redirect(url_for('views.home'))
 
@@ -91,7 +91,7 @@ def schedule():
 
         sql = text("select * from V_Appointments WHERE Staff_ID = " + str(doctorID))
         appointments = db.engine.execute(sql)
-        return render_template("schedule.html", staff=doctor, patient= None, appointments=appointments, schedules=schedules)
+        return render_template("schedule.html", staff=doctor, role="staff", appointments=appointments, schedules=schedules)
     else:
         return redirect(url_for('views.home'))
 
@@ -126,7 +126,7 @@ def insert_availability():
 def admin():
     if check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
 
-        return render_template("admin.html", staff=None, patient=None, admin=True)
+        return render_template("admin.html", role="admin", admin=True)
     else:
         return redirect(url_for('auth.login'))
 
@@ -150,9 +150,9 @@ def appointments():
 
         specifications = Specification.query.all()
 
-        return render_template("appointments.html", patient=user, appointments=appointments, specifications = specifications)
+        return render_template("appointments.html", role = "patient", patient=user, appointments=appointments, specifications = specifications)
 
-    elif request.method == 'POST':
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Patient" and request.method == 'POST':
         schedule_id = request.form.get('date')
 
         patient_id = session["Patient_ID"]
@@ -164,8 +164,26 @@ def appointments():
         flash('Appointment is set!', category='success')
         return  redirect(url_for('views.appointments'))
 
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+        #("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        sql = text("select * from V_Appointments ")
+        appointments = db.engine.execute(sql)
+        patients = Patient.query.all()
+        specifications = Specification.query.all()
+        staff = HospitalStaff.query.filter_by(Staff_ID = staff).first()
 
+        return render_template("staff_appointments.html", role="staff", patient= patients, appointments=appointments, specifications = specifications)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        patient_id = request.form.get('patient')
+        schedule_id = request.form.get('date')
+        type = "Visit"
 
+        new_appointment = Appointment(Schedule_ID=schedule_id, Patient_ID=patient_id, Type=type, Status=1)
+        db.session.add(new_appointment)
+        db.session.commit()
+        flash('Appointment is set!', category='success')
+        return redirect(url_for('views.appointments'))
     else:
         return redirect(url_for('auth.login'))
 
@@ -221,6 +239,33 @@ def list_appointments():
             available_slots = db.engine.execute(sql)
             all_slots = [{'id' :str(slot.Schedule_ID), 'date':slot.Slot} for slot in available_slots]
             return jsonify(all_slots)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        if request.args.get("Patient_ID") != None:
+            patient_id = request.args.get("Patient_ID")
+
+            #return active appointments of the chosen patient
+
+            sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
+            all_appointments = db.engine.execute(sql)
+            all_staff = [{'id': appointment.Appointment_ID, 'staff':appointment.Staff_Name, 'date': appointment.Schedule_Date, 'start_time' : str(appointment.Start_Time), 'end_time' : str(appointment.End_Time), 'specification': appointment.Specification } for appointment in all_appointments]
+            return jsonify(all_staff)
+
+        if request.args.get("Doctor_ID") != None:
+            doctor_id = request.args.get("Doctor_ID")
+            sql = text(
+                "SELECT 	Schedule_ID,CONCAT(CONCAT(DATE_FORMAT(Schedule_Date, '%d/%m/%Y'), ' ', DATE_FORMAT(Start_Time, '%H:%i')), ' - ', DATE_FORMAT(End_Time, '%H:%i')) as Slot FROM V_Available_Slots Where Doctor_ID = " + str(
+                    doctor_id))
+            available_slots = db.engine.execute(sql)
+            all_slots = [{'id': str(slot.Schedule_ID), 'date': slot.Slot} for slot in available_slots]
+            return jsonify(all_slots)
+
+
+        if request.args.get("Specification_ID") != None:
+            spec_id = request.args.get("Specification_ID")
+            staffs = HospitalStaff.query.filter_by(Specification_ID = spec_id).all()
+            all_staff = [{'id': staf_members.Staff_ID, 'name': staf_members.Name + " " + staf_members.Surname} for staf_members in staffs]
+            return jsonify(all_staff)
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -244,6 +289,17 @@ def list_rooms():
         rooms = Room.query.all()
         all_slots = [{'id': str(slot.Room_ID), 'desc': "Type: (" + slot.Type + ") (Building: " + slot.Building + ") Room: (" + slot.Room + ")"} for slot in rooms]
         return jsonify(all_slots)
+    else:
+        return redirect(url_for('auth.login'))
+
+
+
+@views.route('/list_patients', methods = ['GET'])
+def list_patients():
+    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient":
+        patients = Patient.query.all()
+        all_patients = [{'id': str(patient.Patient_ID), 'desc': "" + patient.Name + " " + patient.Surname + "  -> " + str(datetime.strftime(patient.Birthdate, "%d%/%m%/%Y") ) } for patient in patients]
+        return jsonify(all_patients)
     else:
         return redirect(url_for('auth.login'))
 

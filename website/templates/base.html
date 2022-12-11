@@ -44,20 +44,14 @@
 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
-{% if patient != None %}
-            <!-- Nav Item - Dashboard -->
-            <li class="nav-item">
+
+    {% if role == "admin" %}
+         <li class="nav-item">
                 <a class="nav-link" href="/">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Homepage</span></a>
+                    <span>Admin Home</span></a>
             </li>
-
-                 <li class="nav-item">
-                <a class="nav-link" href="/appointments">
-                    <i class="fas fa-fw fa-calendar-check"></i>
-                    <span>Appointments</span></a>
-            </li>
-{% elif staff != None %}
+ {% elif role == "staff" %}
          <li class="nav-item">
                 <a class="nav-link" href="/">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
@@ -70,9 +64,9 @@
                     <span>My Schedule</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/">
+                <a class="nav-link" href="/appointments">
                     <i class="fas fa-fw fa-calendar-check"></i>
-                    <span>Appointments</span></a>
+                    <span>Create Appointment</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/">
@@ -91,13 +85,21 @@
                     <span>Invoices</span></a>
             </li>
 
-
-    {% elif admin != None %}
-         <li class="nav-item">
+{% elif role == "patient" %}
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
                 <a class="nav-link" href="/">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Admin Home</span></a>
+                    <span>Homepage</span></a>
             </li>
+
+                 <li class="nav-item">
+                <a class="nav-link" href="/appointments">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Appointments</span></a>
+            </li>
+
+
 
     {% endif %}
 
@@ -186,7 +188,7 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='bootstrap_suggest.js') }}"></script>
 
     {% block scripts %}
 {% endblock %}

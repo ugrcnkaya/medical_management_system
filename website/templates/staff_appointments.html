@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Create Appointment</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Appointment Form -->
+
+
+                            <form method="post">
+  <div class="form-group">
+
+          <label for="patient">Patient</label>
+      <select id="patient" name="patient" class="form-control">
+          <option value="">Select a patient...</option>
+      </select>
+
+
+ <hr>
+
+    <label for="Specification">Specification</label>
+        <select id="specification" name="specification" id="specification" class="form-control">
+            <option selected value="0">Choose...</option>
+ {% for specify in specifications %}
+ <option value="{{ specify.Specification_ID }}">{{ specify.Title }}</option>
+{% endfor %}
+
+
+
+
+        </select>
+      <hr>
+   <!-- <small id="emailHelp" class="form-text text-muted">Small Note.</small> -->
+      <label for="doctor">Staff</label>
+        <select id="doctor" name="doctor" class="form-control">
+         <option selected>Choose...</option>
+
+        </select>
+ <hr>
+      <label for="date">Date:</label>
+        <select id="date" name="date" class="form-control">
+         <option selected>Choose...</option>
+        </select>
+ <hr>
+
+
+
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+
+
+
+                  <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Appointments</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+
+                                    <tbody>
+                                        <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Specification</td>
+                                            <td>Type</td>
+                                            <td>Room</td>
+                                            <td>Status</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+
+
+
+    <script>
+
+
+    $(document).ready(function(){
+             $.ajax({
+            type: 'GET',
+            url: "/list_patients",
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 $("#patient").empty();
+
+                   var output = "<option selected value=\"0\">Choose...</option>";
+                   $.each(response, function(a,b){
+
+                         output += "<option value="+(b.id).toUpperCase()+">"+(b.desc).toUpperCase()+"</option>";
+                   })
+                $("#patient").append(output);
+                       $('#patient').selectize({
+                                  sortField: 'text'
+                            });
+            }
+        });
+
+
+    $("select#patient").change(function() {
+        var patientID = $(this).find('option:selected').text();
+        if (patientID != "Choose...") {
+            //var Specification = ($('#specification option:selected').text());
+            var select = document.getElementById('patient');
+            var value = select.options[select.selectedIndex].value;
+             $.ajax({
+            type: 'GET',
+            url: "/list_appointments?Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+                       $("#dataTable").empty();
+                       console.log(response)
+                       output  = `<thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Staff Name</th>
+                                            <th>Specification</th>
+                                            <th>Type</th>
+                                            <th>Room</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead><tr>`;
+                      $.each(response, function(a,b){
+                         output += "<td>"+b.date+"</td>";
+                         output += "<td>"+b.date+"</td>";
+                         output += "<td>"+b.date+"</td>";
+                         output += "<td>"+b.date+"</td>";
+                         output += "<td>"+b.date+"</td>";
+                         output += "<td>"+b.date+"</td>";
+                   })
+                       $("#dataTable").empty();
+                     $("#dataTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+        }
+
+    });
+
+
+
+
+
+});
+
+
+
+
+
+
+    </script>
+
+{% endblock %}
