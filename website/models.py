@@ -107,6 +107,22 @@ class Invoice(db.Model):
     Patient = relationship('Patient')
 
 
+
+
+class RoomBooking(db.Model):
+    __tablename__ = 'Room_Bookings'
+
+    Booking_ID = Column(Integer, primary_key=True)
+    Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
+    Room_ID = Column(ForeignKey('Rooms.Room_ID'), index=True)
+    Start_Date = Column(DateTime)
+    End_Date = Column(DateTime)
+    Status = Column(Integer, comment='1 = Active, 0 = Cancelled')
+    Patient = relationship('Patient')
+    Room = relationship('Room')
+
+
+
 class AvailabilitySchedule(db.Model):
     __tablename__ = 'Availability_Schedule'
 
