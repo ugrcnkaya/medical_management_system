@@ -1,0 +1,74 @@
+{% extends 'base.html' %} 
+{% block title%} Rooms {% endblock %}
+{% block content %} 
+
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Rooms</h1>
+    
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Manage Admissions</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Room Name/Number</th>
+                            <th>Patient Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                
+                        {% for admission in admissions %}
+  
+                        <tr>
+                            <td>{{ admission.Room }}</td>
+                            <td>{{ admission.Name }}</td>
+                            <td>{{ admission.Start_Date }}</td>
+                            <td>{{ admission.End_Date }}</td>
+                            {% if admission.Status %}
+                                <td>Active</td>
+                                <td>
+                                    <form action="{{ url_for('views.canceladmission', id=admission.Booking_ID) }}" method="POST">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Admission</button>
+                                    </form>
+                                </td>
+                            {% else %}
+                                <td>Cancelled</td>
+                                <td></td>
+                            {% endif %}
+                            
+                            
+                        </tr>
+
+                        {%endfor%}
+                        
+                       
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>
+<!-- /.container-fluid -->
+
+
+{% endblock %}
+
+
+

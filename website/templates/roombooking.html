@@ -1,0 +1,102 @@
+{% extends 'base.html' %} 
+{% block title%} Rooms {% endblock %}
+{% block content %} 
+
+
+<body class="bg-gradient-primary">
+
+    <div class="container">
+
+        <!-- Outer Row -->
+        <div class="row justify-content-center">
+
+            <div class="col-xl-10 col-lg-12 col-md-9">
+
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <!-- Nested Row within Card Body -->
+                        <div class="row">
+                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+                            <div class="col-lg-6">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <h1 class="h4 text-gray-900 mb-4">Room Admission Booking</h1>
+                                    </div>
+                                    <form class="user" method="post">
+                                        <h6>Please Enter Patient Details</h6>
+                                        <div class="form-group">
+                                            <input 
+                                                type="text" 
+                                                class="form-control" 
+                                                id="patientname" 
+                                                name="patientname" 
+                                                placeholder="Enter Patient Name"
+                                            />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <input 
+                                                type="text" 
+                                                class="form-control" 
+                                                id="patientemail" 
+                                                name="patientemail" 
+                                                placeholder="Enter Patient's Email Address"
+                                            />
+                                        </div>
+                                    
+                                       
+
+
+                                        <h6 class="heading">Please Select Room Details</h6>
+                                        <div class="form-group">
+                                            <div class="grid">
+                                            <div class="col-1-4 col-1-4-sm">
+                                              <div class="controls">
+                                                <label for="arrive"><i class="fa fa-calendar"></i>&nbsp;&nbsp;Start Date</label>
+                                                <input type="date" id="arrive" class="form-control" name="arrive" value="<?php echo date('Y-m-d'); ?>">                                              </div>      
+                                            </div>
+                                            <div class="col-1-4 col-1-4-sm">
+                                              <div class="controls">
+                                                <label for="depart"><i class="fa fa-calendar"></i>&nbsp;&nbsp;End Date</label>
+                                                <input type="date" id="depart" class="form-control" name="depart" value="<?php echo date('Y-m-d'); ?>" />
+                                              </div>      
+                                            </div>
+                                        </div>
+
+                                      
+                                        <div class="form-group">
+                                            <label for="room">Room Name/Number</label>
+                                            <select class="form-control" 
+                                                    id="room" 
+                                                    name="room" 
+                                                    placeholder="Select Room Name/Number">
+                                                    {% for availableroom in availablerooms %}
+                                                        <option value={{ availableroom[0] }} selected>{{ availableroom[1] }}</option>
+                                                    {%endfor%}
+                                            </select>
+                                        </div>
+
+
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Record Admission</button>
+                                      
+                                   </form>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+
+
+
+
+{% endblock %}
