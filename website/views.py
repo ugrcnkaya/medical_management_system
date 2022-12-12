@@ -58,12 +58,13 @@ def bookrooms():
             Patient_ID = patient_id[0],
             Room_ID = request.form.get('room'),
             Start_Date = request.form.get('arrive'),
-            End_Date = request.form.get('depart'),
+            # End_Date = request.form.get('depart'),
             Status = 1
             )
         
         db.session.add(new_admission)
         db.session.commit()
+        flash('Admission Successful')
         return redirect('/roombooking')
     statement = text("SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
     availablerooms = db.session.execute(statement)
@@ -72,13 +73,20 @@ def bookrooms():
 
 @views.route('/roomadmissions', methods=['GET', 'POST'])
 def showadmissions():
-    stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID")
+    stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY Room_Bookings.Start_Date desc")
     admissions = db.session.execute(stmt)
     return render_template('roomadmissions.html',admissions=admissions)
 
 @views.route('/canceladmission/<int:id>', methods=['POST'])
 def canceladmission(id):
     stmt = text("UPDATE Room_Bookings SET Status=0 WHERE Booking_ID='"+str(id)+"'")
+    db.session.execute(stmt)
+    db.session.commit()
+    return redirect('/roomadmissions')
+
+@views.route('/dischargeadmission/<int:id>', methods=['POST'])
+def dischargeadmission(id):
+    stmt = text("UPDATE Room_Bookings SET Status=2,End_Date= (SELECT NOW()) WHERE Booking_ID='"+str(id)+"'")
     db.session.execute(stmt)
     db.session.commit()
     return redirect('/roomadmissions')

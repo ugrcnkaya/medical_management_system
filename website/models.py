@@ -204,6 +204,6 @@ class RoomBooking(db.Model):
     Room_ID = Column(ForeignKey('Rooms.Room_ID'), index=True)
     Start_Date = Column(DateTime)
     End_Date = Column(DateTime)
-    Status = Column(Integer, comment='1 = Active, 0 = Cancelled')
+    Status = Column(Integer, comment='1 = Active, 0 = Cancelled, 2 = Discharged')
     Patient = relationship('Patient')
     Room = relationship('Room')
