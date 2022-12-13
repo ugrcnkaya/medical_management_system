@@ -44,6 +44,10 @@
                                                 </button>
                                             {% elif appointment.Status == 0 %}
                                                 Cancelled
+                                            {% elif appointment.Status == 2 %}
+                                                Completed
+                                            {% elif appointment.Status == 3 %}
+                                                Past Appointment
                                             {% endif %}
                                                 </td>
                                         </tr>

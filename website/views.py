@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -41,6 +41,25 @@ def staff():
         return render_template("staff_profile.html", role="staff", staff=doctor, patient= None)
     else:
         return redirect(url_for('views.home'))
+
+
+#create new prescription
+@views.route('/create_prescription', methods = ['POST'])
+def create_prescription():
+    if request.method == "POST" and check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        Patient_ID = data['Patient_ID']
+        Staff_ID = data['Staff_ID']
+        ##check if there is a patient and a staff with that id
+        patient = Patient.query.filter_by(Patient_ID = Patient_ID).first()
+        staff = HospitalStaff.query.filter_by(Staff_ID = Staff_ID).first()
+        if patient and staff:
+            new_prescription = Prescription(Patient_ID = patient.Patient_ID, Staff_ID = staff.Staff_ID, Prescription_Date = func.now())
+            db.session.add(new_prescription)
+            db.session.commit()
+
+    return redirect(url_for('views.home'))
+
 
 
 
@@ -175,6 +194,8 @@ def appointments():
 
         return render_template("staff_appointments.html", role="staff", patient= patients, appointments=appointments, specifications = specifications)
     elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        ##staff - creating an appointment
+
         patient_id = request.form.get('patient')
         schedule_id = request.form.get('date')
         type = "Visit"
@@ -186,6 +207,19 @@ def appointments():
         return redirect(url_for('views.appointments'))
     else:
         return redirect(url_for('auth.login'))
+
+
+
+#patients-page
+@views.route('/patients', methods=['GET', 'POST'])
+def patients():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None)
+    else:
+        return redirect(url_for('views.appointments'))
+
 
 
 @views.route('/cancel-appointment', methods = ['POST'])
@@ -222,6 +256,23 @@ def cancel_appointment():
         return redirect(url_for('auth.login'))
 
 
+@views.route('/completeAppointment', methods = ['POST'])
+def complete_appointment():
+    if check_session()["Logged_In"] != False:
+        appointment = json.loads(request.data)
+        #get the appointment info first
+        # check if this appointment is actually current patient's, (they can change javascript post id)
+        if check_session()["Role"] != "Patient":
+            sql = text("UPDATE Appointments SET Status = 2 WHERE Appointment_ID = "+ str(appointment['Appointment_ID']))
+            db.engine.execute(sql)
+    else:
+        print("works here3")
+        return redirect(url_for('auth.login'))
+
+
+
+
+
 
 # JSON Call - List Appointments Available
 @views.route('/list_appointments', methods = ['GET'])
@@ -242,10 +293,11 @@ def list_appointments():
     elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
         if request.args.get("Patient_ID") != None:
             patient_id = request.args.get("Patient_ID")
-
             #return active appointments of the chosen patient
-
-            sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
+            if request.args.get("Type") != "All":
+             sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
+            else:
+             sql = text("select * from V_Appointments WHERE  Patient_ID = " + str(patient_id))
             all_appointments = db.engine.execute(sql)
             all_staff = [{'id': appointment.Appointment_ID, 'staff':appointment.Staff_Name, 'date': datetime.strftime(appointment.Schedule_Date,"%d%/%m%/%Y"), 'start_time' : str(appointment.Start_Time), 'end_time' : str(appointment.End_Time), 'specification': appointment.Specification, 'room':appointment.Room, 'status': appointment.Status } for appointment in all_appointments]
             return jsonify(all_staff)
@@ -302,6 +354,46 @@ def list_patients():
         return jsonify(all_patients)
     else:
         return redirect(url_for('auth.login'))
+
+#list_prescriptions
+
+
+# in order to return the content of the prescription from other table
+def prescription_detail(prescription_id):
+    contents = PrescriptionContent.query.filter_by(Prescription_ID = prescription_id).all()
+    header = "<ul>"
+    text = ""
+    if contents:
+     for content in contents:
+         text += "<li>" +  str(content.Box)  + "x " + content.Medicine.Name + "</li>"
+    footer = "</ul>"
+    return header+text+footer
+
+
+@views.route('/list_prescriptions', methods = ['GET'])
+def list_prescriptions():
+    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None:
+        patient_id = request.args.get("Patient_ID")
+        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
+        all_prescriptions = None
+        if prescriptions:
+
+            all_prescriptions = [{'id': str(prescription.Prescription_ID),
+                                  'staff_name': prescription.Hospital_Staff.Name + " " + prescription.Hospital_Staff.Surname,
+                                  'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M'),
+                                  'content': prescription_detail(prescription.Prescription_ID)
+
+
+
+
+
+                             } for prescription in prescriptions]
+
+        return jsonify(all_prescriptions)
+    else:
+        return redirect(url_for('auth.login'))
+
+
 
 
 

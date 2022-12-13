@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Patients</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Appointment Form -->
+
+
+                            <form method="post">
+  <div class="form-group">
+
+          <label for="patient">Patient</label>
+      <select id="patient" name="patient" class="form-control">
+          <option value="">Select a patient...</option>
+      </select>
+
+
+
+
+
+
+
+  </div>
+
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+
+
+
+                  <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Appointments of The Patient</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+        <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Prescriptions    <button class="btn btn-primary" onclick="createPrescription()" data-toggle="button" aria-pressed="false">+</button>
+</h6>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="prescriptionsTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+        </div>
+        <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+        </div>
+            <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Invoices</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+        </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+
+
+
+    <script>
+    function status(x, id){
+        if(x == 1){
+
+            return "<button class='btn btn-success'><span aria-hidden='true' onclick='completeAppointment("+id+")'>Mark as Completed</span></button>"
+        }
+        else if(x == 0){
+            return "<button class='btn btn-danger' disabled><span aria-hidden='true'>Cancelled</span></button>"
+        }
+        else if(x == 2){
+            return "<button class='btn btn-secondary' disabled><span aria-hidden='true'>Already Visited</span></button>"
+        }
+
+    }
+
+    function completeAppointment(Appointment_ID) {
+  fetch("/completeAppointment", {
+    method: "POST",
+    body: JSON.stringify({ Appointment_ID: Appointment_ID }),
+  }).then((_res) => {
+    updatePage()
+
+  });
+    }
+
+        function createPrescription_POST(Patient_ID, Staff_ID) {
+          fetch("/create_prescription", {
+            method: "POST",
+            body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID  }),
+          }).then((_res) => {
+             updatePrescriptions();
+          });
+    }
+
+
+    function createPrescription() {
+
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        var staffID = {{ staff }};
+        if (patient_ID != 0){
+            //console.log("Patient ID :" + patient_ID  )
+            //console.log(staffID)
+            createPrescription_POST(patient_ID,staffID)
+
+        }
+    }
+
+    function updatePrescriptions(){
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        console.log(patient_ID)
+        if (patient_ID != "Choose...") {
+             $("#prescriptionsTable").empty();
+
+
+            var value = patient_ID;
+             $.ajax({
+            type: 'GET',
+            url: "/list_prescriptions?Type=All&Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#prescriptionsTable").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Content</td>
+                                            <td>Actions</td>
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date_created+"</td>" +
+                              "<td>"+b.staff_name+"</td>" +
+                             "<td>"+b.content+"</td>" +
+                             "<td>" +
+                             "<a href='https://unsplash.it/1200/768?image=261'  data-toggle='lightbox'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
+                             "</i></a>&nbsp" +
+                             "<a class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'>" +
+                             "</i></a>" +
+                             "</td>"+
+
+                             "</tr>";
+
+
+                   })
+                       $("#prescriptionsTable").empty();
+                     $("#prescriptionsTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+    }
+
+
+
+
+   function updatePage() {
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        console.log(patient_ID)
+
+        //update appointments and status
+
+        $("#bottomPanel").hide();
+        if (patient_ID != "Choose...") {
+            $("#dataTable").empty();
+            //var Specification = ($('#specification option:selected').text());
+
+            var value = patient_ID;
+             $.ajax({
+            type: 'GET',
+            url: "/list_appointments?Type=All&Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+                        $("#bottomPanel").show();
+                       $("#dataTable").empty();
+                       console.log(response)
+                       output  = `  <thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Specification</td>
+
+                                            <td>Room</td>
+                                            <td>Actions</td>
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+                             "<td>"+b.specification+"</td>" +
+                             "<td>"+b.room+"</td>" +
+                             "<td>"+
+                                    status(b.status, b.id)
+                                +"</td>" +
+
+                             "</tr>";
+
+
+                   })
+                       $("#dataTable").empty();
+                     $("#dataTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+        }
+
+
+
+
+    }
+
+    $(document).ready(function(){
+        $("#bottomPanel").hide();
+             $.ajax({
+            type: 'GET',
+            url: "/list_patients",
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 $("#patient").empty();
+
+                   var output = "<option selected value=\"0\">Choose...</option>";
+                   $.each(response, function(a,b){
+
+                         output += "<option value="+(b.id).toUpperCase()+">"+(b.desc).toUpperCase()+"</option>";
+                   })
+                $("#patient").append(output);
+                       $('#patient').selectize({
+                                  sortField: 'text'
+                            });
+            }
+        });
+
+
+
+
+
+
+
+
+    $("select#patient").change(function() {
+         $("#bottomPanel").hide();
+           updatePrescriptions();
+        var patientID = $(this).find('option:selected').text();
+        if (patientID != "Choose...") {
+            $("#dataTable").empty();
+            //var Specification = ($('#specification option:selected').text());
+            var select = document.getElementById('patient');
+            var value = select.options[select.selectedIndex].value;
+             $.ajax({
+            type: 'GET',
+            url: "/list_appointments?Type=All&Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+                        $("#bottomPanel").show();
+                       $("#dataTable").empty();
+                       console.log(response)
+                       output  = `  <thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Specification</td>
+
+                                            <td>Room</td>
+                                            <td>Actions</td>
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+                             "<td>"+b.specification+"</td>" +
+                             "<td>"+b.room+"</td>" +
+                             "<td>"+
+                                    status(b.status, b.id)
+                                +"</td>" +
+
+                             "</tr>";
+
+
+                   })
+                       $("#dataTable").empty();
+                     $("#dataTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+        }
+
+    });
+
+
+
+
+
+});
+
+
+
+
+
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js"></script>
+    <script>
+                $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+            });
+    </script>
+{% endblock %}
