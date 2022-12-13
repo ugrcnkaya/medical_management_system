@@ -2,7 +2,7 @@
 from . import db  # current folder : call db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-from sqlalchemy import Column, DECIMAL, Date, DateTime, ForeignKey, Integer, String, TIMESTAMP, Table, Time, text
+from sqlalchemy import Column, DECIMAL, Date, DateTime, ForeignKey, Integer, String, TIMESTAMP, Table, Time, text, Boolean, Enum
 from sqlalchemy.dialects.mysql import INTEGER, VARCHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -211,3 +211,16 @@ class Diagnose(db.Model):
     Appointment = relationship('Appointment')
     Disease = relationship('Disease')
     Patient = relationship('Patient')
+
+
+class RoomBooking(db.Model):
+    __tablename__ = 'Room_Bookings'
+
+    Booking_ID = Column(Integer, primary_key=True)
+    Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
+    Room_ID = Column(ForeignKey('Rooms.Room_ID'), index=True)
+    Start_Date = Column(DateTime)
+    End_Date = Column(DateTime)
+    Status = Column(Integer, comment='1 = Active, 0 = Cancelled, 2 = Discharged')
+    Patient = relationship('Patient')
+    Room = relationship('Room')
