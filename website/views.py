@@ -242,6 +242,23 @@ def cancel_appointment():
         return redirect(url_for('auth.login'))
 
 
+@views.route('/completeAppointment', methods = ['POST'])
+def complete_appointment():
+    if check_session()["Logged_In"] != False:
+        appointment = json.loads(request.data)
+        #get the appointment info first
+        # check if this appointment is actually current patient's, (they can change javascript post id)
+        if check_session()["Role"] != "Patient":
+            sql = text("UPDATE Appointments SET Status = 2 WHERE Appointment_ID = "+ str(appointment['Appointment_ID']))
+            db.engine.execute(sql)
+    else:
+        print("works here3")
+        return redirect(url_for('auth.login'))
+
+
+
+
+
 
 # JSON Call - List Appointments Available
 @views.route('/list_appointments', methods = ['GET'])
@@ -262,10 +279,11 @@ def list_appointments():
     elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
         if request.args.get("Patient_ID") != None:
             patient_id = request.args.get("Patient_ID")
-
             #return active appointments of the chosen patient
-
-            sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
+            if request.args.get("Type") != "All":
+             sql = text("select * from V_Appointments WHERE Status = 1 and  Patient_ID = " + str(patient_id))
+            else:
+             sql = text("select * from V_Appointments WHERE  Patient_ID = " + str(patient_id))
             all_appointments = db.engine.execute(sql)
             all_staff = [{'id': appointment.Appointment_ID, 'staff':appointment.Staff_Name, 'date': datetime.strftime(appointment.Schedule_Date,"%d%/%m%/%Y"), 'start_time' : str(appointment.Start_Time), 'end_time' : str(appointment.End_Time), 'specification': appointment.Specification, 'room':appointment.Room, 'status': appointment.Status } for appointment in all_appointments]
             return jsonify(all_staff)

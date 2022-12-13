@@ -9,6 +9,9 @@ function cancelAppointment(Appointment_ID) {
   });
 }
 
+
+
+
 //dele schedule
 function cancelSchedule(Schedule_ID) {
   fetch("/delete-schedule", {
