@@ -24,7 +24,7 @@ class Medicine(db.Model):
     Barcode = Column(String(120))
 
 
-class Patient(db.Model, UserMixin):
+class Patient(db.Model):
     __tablename__ = 'Patients'
 
     Patient_ID = Column(Integer, primary_key=True)
@@ -107,15 +107,31 @@ class Invoice(db.Model):
     Patient = relationship('Patient')
 
 
+
+
+class RoomBooking(db.Model):
+    __tablename__ = 'Room_Bookings'
+
+    Booking_ID = Column(Integer, primary_key=True)
+    Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
+    Room_ID = Column(ForeignKey('Rooms.Room_ID'), index=True)
+    Start_Date = Column(DateTime)
+    End_Date = Column(DateTime)
+    Status = Column(Integer, comment='1 = Active, 0 = Cancelled')
+    Patient = relationship('Patient')
+    Room = relationship('Room')
+
+
+
 class AvailabilitySchedule(db.Model):
     __tablename__ = 'Availability_Schedule'
 
-    Schedule_ID = Column(INTEGER, primary_key=True)
+    Schedule_ID = Column(INTEGER, primary_key=True,autoincrement=True)
     Schedule_Date = Column(Date)
     Slot_ID = Column(ForeignKey('Time_Slots.Slot_ID', ondelete='RESTRICT'), nullable=False, index=True)
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), nullable=False, index=True)
     Room_ID = Column(ForeignKey('Rooms.Room_ID'), index=True)
-
+    Status = Column(Integer)
     Room = relationship('Room')
     Time_Slot = relationship('TimeSlot')
     Hospital_Staff = relationship('HospitalStaff')
@@ -153,7 +169,7 @@ class Prescription(db.Model):
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
     Description = Column(String(255))
-    Prescription_Date = Column(DateTime)
+    Prescription_Date = Column(DateTime, server_default=func.now())
 
     Patient = relationship('Patient')
     Hospital_Staff = relationship('HospitalStaff')
@@ -162,8 +178,9 @@ class Prescription(db.Model):
 class Appointment(db.Model):
     __tablename__ = 'Appointments'
 
-    Appointment_ID = Column(INTEGER, primary_key=True)
+    Appointment_ID = Column(INTEGER, primary_key=True, autoincrement=True)
     Schedule_ID = Column(ForeignKey('Availability_Schedule.Schedule_ID'), index=True)
+    Status = Column(Integer)
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
     Type = Column(String(255))
 
@@ -190,7 +207,7 @@ class Diagnose(db.Model):
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
     Appointment_ID = Column(ForeignKey('Appointments.Appointment_ID'), index=True)
     Disease_ID = Column(ForeignKey('Diseases.Disease_ID'), index=True)
-
+    Date_Created = Column(TIMESTAMP, server_default=func.now())
     Appointment = relationship('Appointment')
     Disease = relationship('Disease')
     Patient = relationship('Patient')

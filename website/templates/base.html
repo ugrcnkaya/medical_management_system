@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{% block title %}Home{% endblock %}</title>
+    <title>{% block title %}[Home]{% endblock %}</title>
 
     <!-- Custom fonts for this template-->
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
@@ -21,7 +21,9 @@
 
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
 
+    {% block head %}
 
+    {% endblock %}
 </head>
 
 <body id="page-top">
@@ -43,6 +45,47 @@
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
+    {% if role == "admin" %}
+         <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Admin Home</span></a>
+            </li>
+ {% elif role == "staff" %}
+         <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Home</span></a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/schedule">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>My Schedule</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/appointments">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Create Appointment</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/patients">
+                    <i class="fas fa-fw fa-stethoscope"></i>
+                    <span>Patients</span></a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-fw fa-prescription-bottle"></i>
+                    <span>Prescriptions</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-fw fa-file-invoice"></i>
+                    <span>Invoices</span></a>
+            </li>
+
+{% elif role == "patient" %}
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
                 <a class="nav-link" href="/">
@@ -50,32 +93,17 @@
                     <span>Homepage</span></a>
             </li>
 
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Interface
-            </div>
-
-            <!-- Nav Item - Pages Collapse Menu -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
-                    <i class="fas fa-fw fa-cog"></i>
-                    <span>Components</span>
-                </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Custom Components:</h6>
-                        <a class="collapse-item" href="buttons.html">Buttons</a>
-                        <a class="collapse-item" href="cards.html">Cards</a>
-                    </div>
-                </div>
+                 <li class="nav-item">
+                <a class="nav-link" href="/appointments">
+                    <i class="fas fa-fw fa-calendar-check"></i>
+                    <span>Appointments</span></a>
             </li>
 
-            <!-- Divider -->
-            <hr class="sidebar-divider d-none d-md-block">
+
+
+    {% endif %}
+
+
              <li class="nav-item">
                 <a class="nav-link" href="/logout">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
@@ -160,7 +188,10 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap_suggest.js') }}"></script>
 
+    {% block scripts %}
+{% endblock %}
 </body>
 
 </html>
