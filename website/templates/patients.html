@@ -2,6 +2,7 @@
 {% block title %}Patients{% endblock %}
 {% block head %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
 {% endblock %}
@@ -67,11 +68,13 @@
 
         <div class="card shadow mb-4" id="bottomPanel">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Prescriptions</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Prescriptions    <button class="btn btn-primary" onclick="createPrescription()" data-toggle="button" aria-pressed="false">+</button>
+</h6>
+
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <table class="table table-bordered" id="prescriptionsTable" width="100%" cellspacing="0">
 
                                     <tbody>
 
@@ -147,8 +150,99 @@
     body: JSON.stringify({ Appointment_ID: Appointment_ID }),
   }).then((_res) => {
     updatePage()
+
   });
     }
+
+        function createPrescription_POST(Patient_ID, Staff_ID) {
+          fetch("/create_prescription", {
+            method: "POST",
+            body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID  }),
+          }).then((_res) => {
+             updatePrescriptions();
+          });
+    }
+
+
+    function createPrescription() {
+
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        var staffID = {{ staff }};
+        if (patient_ID != 0){
+            //console.log("Patient ID :" + patient_ID  )
+            //console.log(staffID)
+            createPrescription_POST(patient_ID,staffID)
+
+        }
+    }
+
+    function updatePrescriptions(){
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        console.log(patient_ID)
+        if (patient_ID != "Choose...") {
+             $("#prescriptionsTable").empty();
+
+
+            var value = patient_ID;
+             $.ajax({
+            type: 'GET',
+            url: "/list_prescriptions?Type=All&Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#prescriptionsTable").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Content</td>
+                                            <td>Actions</td>
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date_created+"</td>" +
+                              "<td>"+b.staff_name+"</td>" +
+                             "<td>"+b.staff_name+"</td>" +
+                             "<td>"+b.id+"</td>" +
+
+                             "</tr>";
+
+
+                   })
+                       $("#prescriptionsTable").empty();
+                     $("#prescriptionsTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+    }
+
+
 
 
    function updatePage() {
@@ -249,6 +343,7 @@
 
     $("select#patient").change(function() {
          $("#bottomPanel").hide();
+           updatePrescriptions();
         var patientID = $(this).find('option:selected').text();
         if (patientID != "Choose...") {
             $("#dataTable").empty();
@@ -318,5 +413,11 @@
 
 
     </script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js"></script>
+    <script>
+                $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+            });
+    </script>
 {% endblock %}

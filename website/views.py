@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -41,6 +41,25 @@ def staff():
         return render_template("staff_profile.html", role="staff", staff=doctor, patient= None)
     else:
         return redirect(url_for('views.home'))
+
+
+#create new prescription
+@views.route('/create_prescription', methods = ['POST'])
+def create_prescription():
+    if request.method == "POST" and check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        Patient_ID = data['Patient_ID']
+        Staff_ID = data['Staff_ID']
+        ##check if there is a patient and a staff with that id
+        patient = Patient.query.filter_by(Patient_ID = Patient_ID).first()
+        staff = HospitalStaff.query.filter_by(Staff_ID = Staff_ID).first()
+        if patient and staff:
+            new_prescription = Prescription(Patient_ID = patient.Patient_ID, Staff_ID = staff.Staff_ID, Prescription_Date = func.now())
+            db.session.add(new_prescription)
+            db.session.commit()
+
+    return redirect(url_for('views.home'))
+
 
 
 
@@ -197,12 +216,7 @@ def patients():
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
         # ("staff or admin user visiting appointments view")
         staff = session['Staff_ID']
-        sql = text("select * from V_Appointments ")
-        appointments = db.engine.execute(sql)
-        patients = Patient.query.all()
-        specifications = Specification.query.all()
-        staff = HospitalStaff.query.filter_by(Staff_ID=staff).first()
-        return render_template("patients.html", role="staff", patient= patients, appointments=appointments, specifications = specifications)
+        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None)
     else:
         return redirect(url_for('views.appointments'))
 
@@ -340,6 +354,26 @@ def list_patients():
         return jsonify(all_patients)
     else:
         return redirect(url_for('auth.login'))
+
+#list_prescriptions
+@views.route('/list_prescriptions', methods = ['GET'])
+def list_prescriptions():
+    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None:
+        patient_id = request.args.get("Patient_ID")
+        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
+        all_prescriptions = None
+        if prescriptions:
+            all_prescriptions = [{'id': str(prescription.Prescription_ID),
+                                  'staff_name': prescription.Hospital_Staff.Name + " " + prescription.Hospital_Staff.Surname,
+                                  'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M')
+
+                             } for prescription in prescriptions]
+
+        return jsonify(all_prescriptions)
+    else:
+        return redirect(url_for('auth.login'))
+
+
 
 
 
