@@ -224,11 +224,11 @@ def showrooms():
         db.session.add(new_room)
         db.session.commit()
         rooms = db.session.query(Room).all()
-        return render_template('rooms.html',rooms=rooms)
+        return render_template('rooms.html',rooms=rooms, role="admin")
 
 
     rooms = db.session.query(Room).all()
-    return render_template('rooms.html',rooms=rooms)
+    return render_template('rooms.html',rooms=rooms, role="admin")
 
 @views.route('/deleteroom/<int:id>', methods=['POST'])
 def deleteroom(id):
@@ -260,14 +260,14 @@ def bookrooms():
             flash('Patient Record not found', category='error')
     statement = text("SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
     availablerooms = db.session.execute(statement)
-    return render_template("roombooking.html",availablerooms=availablerooms)
+    return render_template("roombooking.html",availablerooms=availablerooms, role="staff")
 
 
 @views.route('/roomadmissions', methods=['GET', 'POST'])
 def showadmissions():
     stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY Room_Bookings.Start_Date desc")
     admissions = db.session.execute(stmt)
-    return render_template('roomadmissions.html',admissions=admissions)
+    return render_template('roomadmissions.html',admissions=admissions, role="staff")
 
 @views.route('/canceladmission/<int:id>', methods=['POST'])
 def canceladmission(id):
