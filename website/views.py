@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -356,6 +356,20 @@ def list_patients():
         return redirect(url_for('auth.login'))
 
 #list_prescriptions
+
+
+# in order to return the content of the prescription from other table
+def prescription_detail(prescription_id):
+    contents = PrescriptionContent.query.filter_by(Prescription_ID = prescription_id).all()
+    header = "<ul>"
+    text = ""
+    if contents:
+     for content in contents:
+         text += "<li>" +  str(content.Box)  + "x " + content.Medicine.Name + "</li>"
+    footer = "</ul>"
+    return header+text+footer
+
+
 @views.route('/list_prescriptions', methods = ['GET'])
 def list_prescriptions():
     if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None:
@@ -363,9 +377,15 @@ def list_prescriptions():
         prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
         all_prescriptions = None
         if prescriptions:
+
             all_prescriptions = [{'id': str(prescription.Prescription_ID),
                                   'staff_name': prescription.Hospital_Staff.Name + " " + prescription.Hospital_Staff.Surname,
-                                  'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M')
+                                  'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M'),
+                                  'content': prescription_detail(prescription.Prescription_ID)
+
+
+
+
 
                              } for prescription in prescriptions]
 
