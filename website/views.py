@@ -18,7 +18,7 @@ def home():
         patientID = session["Patient_ID"]
         user = Patient.query.filter_by(Patient_ID=patientID).first()
         return render_template("profile.html", patient=user, role="patient")
-    elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and check_session()["Role"] != "Admin":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
         return render_template("staff_profile.html", staff=doctor, role = "staff")
@@ -36,7 +36,7 @@ def staff():
         #patientID = session["Patient_ID"]
        # user = Patient.query.filter_by(Patient_ID=patientID).first()
         return redirect(url_for('views.home'))
-    elif check_session()["Logged_In"] != False and check_session()["Role"] == "1":
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
         doctorID = session["Staff_ID"]
         doctor = HospitalStaff.query.filter_by(Staff_ID = doctorID).first()
         return render_template("staff_profile.html", role="staff", staff=doctor, patient= None)
@@ -105,7 +105,7 @@ def schedule():
                         Rooms b ON a.Room_ID  = b.Room_ID  
                     JOIN 
                         Time_Slots c ON a.Slot_ID = c.Slot_ID 
-            WHERE Status != 0 AND  Schedule_ID NOT IN (SELECT Schedule_ID from V_Appointments WHERE Status = 1 ) AND Staff_ID = """
+            WHERE a.Status != 0 AND  Schedule_ID NOT IN (SELECT Schedule_ID from V_Appointments WHERE Status = 1 ) AND Staff_ID = """
                     + str(doctorID))
         schedules = db.engine.execute(sql)
 
