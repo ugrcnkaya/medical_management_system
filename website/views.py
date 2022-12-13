@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -61,6 +61,26 @@ def create_prescription():
 
     return redirect(url_for('views.home'))
 
+@views.route('/prescription', methods=['GET'])
+def prescription():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        prescriptionID = request.args.get("Prescription_ID")
+        content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
+        medicines = Medicine.query.all()
+        if content:
+            return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
+                                   specifications=None, prescription_content = content, medicines = medicines)
+
+
+
+
+
+
+
+    else:
+        return redirect(url_for('views.home'))
 
 
 
@@ -439,7 +459,7 @@ def prescription_detail(prescription_id):
 
 @views.route('/list_prescriptions', methods = ['GET'])
 def list_prescriptions():
-    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None:
+    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None and request.args.get("PrescriptionID") == None:
         patient_id = request.args.get("Patient_ID")
         prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
         all_prescriptions = None
@@ -457,6 +477,13 @@ def list_prescriptions():
                              } for prescription in prescriptions]
 
         return jsonify(all_prescriptions)
+    elif check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("PrescriptionID") != None:
+        pid = request.args.get("PrescriptionID")
+        contents = PrescriptionContent.query.filter_by(Prescription_ID = pid).all()
+        all_content = ""
+        if contents:
+            all_content = [{'medicine':content.Medicine.Name, 'box': content.Box} for content in contents]
+        return all_content
     else:
         return redirect(url_for('auth.login'))
 
