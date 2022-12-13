@@ -175,6 +175,8 @@ def appointments():
 
         return render_template("staff_appointments.html", role="staff", patient= patients, appointments=appointments, specifications = specifications)
     elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        ##staff - creating an appointment
+
         patient_id = request.form.get('patient')
         schedule_id = request.form.get('date')
         type = "Visit"
@@ -186,6 +188,24 @@ def appointments():
         return redirect(url_for('views.appointments'))
     else:
         return redirect(url_for('auth.login'))
+
+
+
+#patients-page
+@views.route('/patients', methods=['GET', 'POST'])
+def patients():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        sql = text("select * from V_Appointments ")
+        appointments = db.engine.execute(sql)
+        patients = Patient.query.all()
+        specifications = Specification.query.all()
+        staff = HospitalStaff.query.filter_by(Staff_ID=staff).first()
+        return render_template("patients.html", role="staff", patient= patients, appointments=appointments, specifications = specifications)
+    else:
+        return redirect(url_for('views.appointments'))
+
 
 
 @views.route('/cancel-appointment', methods = ['POST'])
