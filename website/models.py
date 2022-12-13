@@ -24,7 +24,7 @@ class Medicine(db.Model):
     Barcode = Column(String(120))
 
 
-class Patient(db.Model, UserMixin):
+class Patient(db.Model):
     __tablename__ = 'Patients'
 
     Patient_ID = Column(Integer, primary_key=True)
