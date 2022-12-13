@@ -53,19 +53,21 @@ def bookrooms():
     if request.method == 'POST':
         query_for_patient = text("SELECT Patient_ID FROM Patients WHERE Name='"+request.form.get('patientname')+"' and E_Mail='"+request.form.get('patientemail')+"'")
         patient_id = db.session.execute(query_for_patient).fetchone()
-        
-        new_admission = RoomBooking(
-            Patient_ID = patient_id[0],
-            Room_ID = request.form.get('room'),
-            Start_Date = request.form.get('arrive'),
-            # End_Date = request.form.get('depart'),
-            Status = 1
-            )
-        
-        db.session.add(new_admission)
-        db.session.commit()
-        flash('Admission Successful')
-        return redirect('/roombooking')
+        if patient_id:
+            new_admission = RoomBooking(
+                Patient_ID = patient_id[0],
+                Room_ID = request.form.get('room'),
+                Start_Date = request.form.get('arrive'),
+                # End_Date = request.form.get('depart'),
+                Status = 1
+                )
+            
+            db.session.add(new_admission)
+            db.session.commit()
+            flash('Admission Successful')
+            return redirect('/roombooking')
+        else:
+            flash('Patient Record not found', category='error')
     statement = text("SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
     availablerooms = db.session.execute(statement)
     return render_template("roombooking.html",availablerooms=availablerooms)
