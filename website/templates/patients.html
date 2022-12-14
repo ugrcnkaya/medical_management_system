@@ -91,7 +91,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <table class="table table-bordered" id="diagnoses" width="100%" cellspacing="0">
 
                                     <tbody>
 
@@ -170,10 +170,18 @@
           updatePrescriptions();
       });
     }
+    function updateDiagnoses(){
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        if (patient_ID != "Choose..."){
+            $("#diagnoses").empty();
+            var value = patient_ID;
 
+        }
+
+    }
     function updatePrescriptions(){
         var patient_ID = $('select#patient').find('option:selected').attr("value");
-        console.log(patient_ID)
+
         if (patient_ID != "Choose...") {
              $("#prescriptionsTable").empty();
 

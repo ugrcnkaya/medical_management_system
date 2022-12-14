@@ -61,15 +61,17 @@ def create_prescription():
 
     return redirect(url_for('views.home'))
 
-@views.route('/prescription', methods=['GET', 'POST'])
+@views.route('/prescription', methods=['GET'])
 def prescription():
-    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
         # ("staff or admin user visiting appointments view")
         staff = session['Staff_ID']
         prescriptionID = request.args.get("Prescription_ID")
+        prescription_ = Prescription.query.filter_by(Prescription_ID = prescriptionID).first()
         content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
         medicines = Medicine.query.all()
-        if content:
+
+        if content and prescription:
             return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
                                    specifications=None, prescription_content = content, medicines = medicines)
 

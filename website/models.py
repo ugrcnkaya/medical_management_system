@@ -195,12 +195,12 @@ class Diagnose(db.Model):
 
     Diagnose_ID = Column(Integer, primary_key=True)
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
-    Appointment_ID = Column(ForeignKey('Appointments.Appointment_ID'), index=True)
     Disease_ID = Column(ForeignKey('Diseases.Disease_ID'), index=True)
+    Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), nullable=False, index=True)
     Date_Created = Column(TIMESTAMP, server_default=func.now())
-    Appointment = relationship('Appointment')
     Disease = relationship('Disease')
     Patient = relationship('Patient')
+    Hospital_Staff = relationship('HospitalStaff')
 
 
 class RoomBooking(db.Model):
