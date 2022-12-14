@@ -22,11 +22,11 @@
                             <!-- Appointment Form -->
 
 
-                            <form method="post">
+                            <form>
   <div class="form-group">
-
+  <input type="hidden" id="PrescriptionID" name="PrescriptionID" value="" />
           <label for="patient">Medicine</label>
-      <select id="patient" name="patient" class="form-control">
+      <select id="medicine" name="medicine" class="form-control">
       <option value="">Select a medicine...</option>
               {% for medicine in medicines %}
                 <option value="{{ medicine.Medicine_ID }}">{{ medicine.Name }}</option>
@@ -36,12 +36,10 @@
             <label for="patient">Number of Box:</label>
 
 
-
-
-<input type="text" class="form-control" value="" id="onlyNumbers" name="onlyNumbers" onkeypress="return isNumber(event)" onpaste="return false;"/>
+<input type="text" class="form-control" id="box" name="box" value="" id="onlyNumbers" name="onlyNumbers" onkeypress="return isNumber(event)" onpaste="return false;"/>
 <hr>
 
-  <button class="btn btn-success"><span aria-hidden="true" onclick="addPrescriptionContent(19)">Add</span></button>
+  <button onclick="addPrescriptionContent()" class="btn btn-success"><span aria-hidden="true">Add</span></button>
 
 
   </div>
@@ -77,6 +75,40 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
 <script>
+
+
+
+
+function removeContent(PRecord_ID) {
+  fetch("/prescription_content_remove", {
+    method: "POST",
+    body: JSON.stringify({ PRecord_ID: PRecord_ID }),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+function addPrescriptionContent() {
+
+    var Prescription_ID = getUrlParameter('PrescriptionID');
+    $("#PrescriptionID").val(Prescription_ID);
+    var medicineID = $('#medicine').val();
+    var box = $('#box').val();
+  fetch("/prescription_add_content", {
+    method: "POST",
+    body: JSON.stringify({ Prescription_ID: Prescription_ID, Medicine_ID :medicineID, Box: box  }),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+
+
+
 function isNumber(evt) {
         evt = (evt) ? evt : window.event;
         var charCode = (evt.which) ? evt.which : evt.keyCode;
@@ -106,7 +138,6 @@ var getUrlParameter = function getUrlParameter(sParam) {
         var PrescriptionID = getUrlParameter('PrescriptionID')
 
 
-
         if (PrescriptionID != "0") {
 
             var value = PrescriptionID;
@@ -128,7 +159,7 @@ var getUrlParameter = function getUrlParameter(sParam) {
                           "<td>" + b.box + "x "+b.medicine +
                           "</td>" +
                           "<td>" +
-                          "Actions" +
+                          "<a onclick='removeContent(" + b.id + ")'  class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>" +
                           "</td>" +
                           "</tr>"
                    })

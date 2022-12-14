@@ -61,7 +61,7 @@ def create_prescription():
 
     return redirect(url_for('views.home'))
 
-@views.route('/prescription', methods=['GET'])
+@views.route('/prescription', methods=['GET', 'POST'])
 def prescription():
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
         # ("staff or admin user visiting appointments view")
@@ -73,15 +73,35 @@ def prescription():
             return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
                                    specifications=None, prescription_content = content, medicines = medicines)
 
-
-
-
-
-
-
     else:
         return redirect(url_for('views.home'))
 
+@views.route('/prescription_content_remove', methods = ['POST'])
+def prescription_content_remove():
+    data = json.loads(request.data)
+    pc = PrescriptionContent.query.filter_by(PRecord_ID = data['PRecord_ID']).first()
+    if pc:
+        db.session.delete(pc)
+        db.session.commit()
+    return redirect(url_for('views.home'))
+@views.route('/prescription_add_content', methods=['POST'])
+def prescription_add_content():
+    data = json.loads(request.data)
+    Prescription_ID = data["Prescription_ID"]
+    MedicineID = data["Medicine_ID"]
+    Box = data["Box"]
+
+    Prescription_ = Prescription.query.filter_by(Prescription_ID= Prescription_ID).first()
+    Medicine_ = Medicine.query.filter_by(Medicine_ID = MedicineID).first()
+    if Prescription_ and Medicine_:
+        PrescriptionContent_ = PrescriptionContent(
+                Prescription_ID = Prescription_ID,
+                Medicine_ID = Medicine_.Medicine_ID,
+                Box = Box
+        )
+        db.session.add(PrescriptionContent_)
+        db.session.commit()
+    return redirect(url_for('views.home'))
 
 
 #delete schedule
@@ -482,7 +502,7 @@ def list_prescriptions():
         contents = PrescriptionContent.query.filter_by(Prescription_ID = pid).all()
         all_content = ""
         if contents:
-            all_content = [{'medicine':content.Medicine.Name, 'box': content.Box} for content in contents]
+            all_content = [{'medicine':content.Medicine.Name, 'box': content.Box, 'id' : content.PRecord_ID} for content in contents]
         return all_content
     else:
         return redirect(url_for('auth.login'))
