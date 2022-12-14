@@ -479,11 +479,34 @@ def prescription_detail(prescription_id):
     return header+text+footer
 
 
+
+@views.route('/cancel-prescription', methods = ['POST'])
+def cancel_prescription():
+    if check_session()["Logged_In"] != False  and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        prescription_id = data['Prescription_ID']
+        staff_id = session.get("Staff_ID")
+        prescription = Prescription.query.filter_by(Prescription_ID = prescription_id, Staff_ID = staff_id).first()
+        if prescription:
+            prescription.Status = 0
+            db.session.commit()
+
+    else:
+        print("works here3")
+        return redirect(url_for('views.home'))
+
+
+
+
+
+
+
+
 @views.route('/list_prescriptions', methods = ['GET'])
 def list_prescriptions():
     if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None and request.args.get("PrescriptionID") == None:
         patient_id = request.args.get("Patient_ID")
-        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
+        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id, Status = 1 ).all()
         all_prescriptions = None
         if prescriptions:
 

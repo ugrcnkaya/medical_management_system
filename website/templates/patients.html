@@ -100,21 +100,6 @@
                             </div>
                         </div>
         </div>
-            <div class="card shadow mb-4" id="bottomPanel">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Invoices</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-
-                                    <tbody>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-        </div>
 
 
 {% endblock %}
@@ -176,6 +161,16 @@
         }
     }
 
+    function cancelPrescription(Prescription_ID) {
+      fetch("/cancel-prescription", {
+        method: "POST",
+        body: JSON.stringify({ Prescription_ID: Prescription_ID }),
+      }).then((_res) => {
+        updatePage();
+          updatePrescriptions();
+      });
+    }
+
     function updatePrescriptions(){
         var patient_ID = $('select#patient').find('option:selected').attr("value");
         console.log(patient_ID)
@@ -212,7 +207,7 @@
                              "<a  onclick='updatePrescriptions()' class='btn btn-info btn-circle btn-sm'> <i class='fas fa-info-circle'></i></a>&nbsp;" +
                              "<a data-fancybox data-type='iframe' href='http://127.0.0.1:5000/prescription?PrescriptionID="+b.id+"'  target='_blank'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
                              "</i></a>&nbsp" +
-                             "<a class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
+                             "<a  onclick='cancelPrescription("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
                              "</td>"+
 
                              "</tr>";

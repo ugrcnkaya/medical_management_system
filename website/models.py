@@ -160,7 +160,7 @@ class Prescription(db.Model):
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
     Description = Column(String(255))
     Prescription_Date = Column(DateTime, server_default=func.now())
-
+    Status = Column(Integer, default = 1)
     Patient = relationship('Patient')
     Hospital_Staff = relationship('HospitalStaff')
 
