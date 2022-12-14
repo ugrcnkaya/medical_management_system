@@ -492,7 +492,6 @@ def cancel_prescription():
             db.session.commit()
 
     else:
-        print("works here3")
         return redirect(url_for('views.home'))
 
 
