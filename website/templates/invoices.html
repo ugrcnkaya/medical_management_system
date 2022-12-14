@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+ <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css"
+    />
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+
+
+
+    <h1 class="h3 mb-4 text-gray-800">Invoices</h1>
+    <div class="row">
+        <div class="col-sm">
+               <!-- List Availability Schedule -->
+
+                    <div class="card shadow mb-2">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Invoice List</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice Number</th>
+                                            <th>Creation Date</th>
+                                            <th>Due Date</th>
+                                            <th>Patient</th>
+                                            <th>Total Debt</th>
+                                            <th>Paid Amount</th>
+                                            <th>Remaining</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+{% for invoice in invoices %}
+                                        <tr>
+                                        <td>{{invoice.Invoice_Number}}</td>
+                                        <td>{{invoice.Creation_Date.strftime('%d-%m-%Y %H:%M')}}</td>
+                                        <td>{{invoice.Due_Date.strftime('%d-%m-%Y %H:%M')}}</td>
+                                        <td>{{invoice.Patient}}</td>
+                                        <td>{{invoice.Total_Amount}} €</td>
+                                        <td>{{invoice.Paid_Amount}} €</td>
+                                        <td>{{invoice.Remaining}} €</td>
+                                        <td>
+                                            <a onclick="showDetails({{invoice.Invoice_Number}})" class="btn btn-info btn-icon-split">
+                                                    <span class="icon text-white-50">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </span>
+                                                    <span class="text">Show Details</span>
+                                            </a>
+                                            <a data-fancybox="" data-type="iframe" href="http://127.0.0.1:5000/add_record?Invoice_Number={{invoice.Invoice_Number}}" class="btn btn-primary btn-icon-split">
+                                                <span class="icon text-white-50">
+                                                    <i class="fas fa-flag"></i>
+                                                </span>
+                                                <span class="text">Add Record</span>
+                                            </a>
+                                            <a data-fancybox="" data-type="iframe" href="http://127.0.0.1:5000/add_payment?Invoice_Number={{invoice.Invoice_Number}}" class="btn btn-secondary btn-icon-split">
+                                                <span class="icon text-white-50">
+                                                    <i class="fas fa-flag"></i>
+                                                </span>
+                                                <span class="text">Add Payment</span>
+                                            </a>
+
+                                        </td>
+                                        </tr>
+{% endfor %}
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+    </div>
+
+
+
+
+        <div class="row">
+        <div class="col-sm">
+               <!-- List Availability Schedule -->
+
+                    <div class="card shadow mb-2" id="invDetailsTab">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Invoice Details
+
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+
+                                <a onclick="hideDetails()" class="btn btn-success btn-icon-split">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span class="text">Hide</span>
+                                    </a>
+
+                               <br>
+                                <br>
+                                <table class="table table-bordered" id="dataTable2" width="100%" cellspacing="0">
+
+
+                                    <tbody>
+
+
+
+
+
+                                    </tbody>
+                                </table>
+                                <hr>
+                                 <table class="table table-bordered" id="dataTable3" width="100%" cellspacing="0">
+
+
+                                    <tbody>
+
+
+
+
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+    </div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+    <script>
+
+ function showDetails(Invoice_Number){
+        if (Invoice_Number != 0) {
+            $("#dataTable2").empty();
+            var value = Invoice_Number;
+
+            $.ajax({
+                type: 'GET',
+                url: "/invoice_records?Invoice_Number=" + value,
+                //data: { Specification: Specification },
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (response) {
+                    //$("#doctor").empty();
+                    if (response.length > 0) {
+
+                        $("#dataTable2").empty();
+                        console.log(response)
+                        output = `<thead>
+                                        <tr>
+                                            <th>Record Date</th>
+                                            <th>Staff</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>`;
+                        $.each(response, function (a, b) {
+                            output += "<tr>" +
+                                "<td>" + b.date + "</td>" +
+                                "<td>" + b.staff_id + "</td>" +
+                                "<td>" + b.description + "</td>" +
+                                "<td>" + b.amount + "</td>" +
+                                "</tr>";
+
+
+                        })
+                        $("#dataTable2").empty();
+                        $("#dataTable2").append(output);
+                        $("#invDetailsTab").show();
+                        showPayments(value);
+
+
+                    }
+
+                }
+            });
+        }
+ }
+
+ function showPayments(Invoice_Number){
+        if (Invoice_Number != 0) {
+            $("#dataTable3").empty();
+            var value = Invoice_Number;
+
+            $.ajax({
+                type: 'GET',
+                url: "/invoice_records?Invoice_Number=" + value,
+                //data: { Specification: Specification },
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (response) {
+                    //$("#doctor").empty();
+                    if (response.length > 0) {
+
+                        $("#dataTable3").empty();
+                        console.log(response)
+                        output = `<thead>
+                                        <tr>
+                                            <th>Payment Date</th>
+                                            <th>Amount</th>
+                                            <th>Description</th>
+
+                                        </tr>
+                                    </thead>`;
+                        $.each(response, function (a, b) {
+                            output += "<tr>" +
+                                "<td>" + b.date + "</td>" +
+                                "<td>" + b.amount + "</td>" +
+                                "<td>" + b.description + "</td>" +
+
+                                "</tr>";
+
+
+                        })
+                        $("#dataTable3").empty();
+                        $("#dataTable3").append(output);
+                        $("#invDetailsTab").show();
+
+
+                    }
+
+                }
+            });
+        }
+ }
+
+
+
+
+$(document).ready(function() {
+    $("#invDetailsTab").hide();
+});
+
+function hideDetails(){
+    $("#invDetailsTab").hide();
+}
+
+    </script>
+
+{% endblock %}

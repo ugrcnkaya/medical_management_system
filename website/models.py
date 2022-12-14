@@ -135,7 +135,7 @@ class InvoiceRecord(db.Model):
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
     Description = Column(String(255))
     Amount = Column(DECIMAL(10, 2))
-
+    Create_Date = Column(TIMESTAMP)
     Invoice = relationship('Invoice')
     Hospital_Staff = relationship('HospitalStaff')
 

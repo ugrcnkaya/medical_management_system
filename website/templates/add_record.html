@@ -1,0 +1,182 @@
+{% extends "base_no_sidebar.html" %}
+
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Add Record Into Invoice</h6>
+                        </div>
+                        <div class="card-body">
+
+
+
+
+
+                            <form>
+  <div class="form-group">
+  <input type="hidden" id="Invoice_Number" name="Invoice_Number" value="" />
+
+      <label>Description</label>
+      <input type="text" class="form-control" name="description" id="description">
+      <hr>
+      <label>Amount</label>
+      <input type="number" max="10000.00" step="0.01" class="form-control" name="amount" id="amount">
+      <hr>
+
+
+  <button onclick="addRecord()" class="btn btn-success"><span aria-hidden="true">Add</span></button>
+
+
+  </div>
+
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+<div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" style="border:0!important;" id="contentTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+
+
+
+
+
+
+function addRecord() {
+
+    var Invoice_Number = getUrlParameter('Invoice_Number')
+
+    $("#Invoice_Number").val(Invoice_Number);
+    var description = $('#description').val();
+    var amount = $('#amount').val();
+  fetch("/add_record", {
+    method: "POST",
+    body: JSON.stringify({ Invoice_Number: Invoice_Number, Description :description, Amount: amount  }),
+  }).then((_res) => {
+    location.reload();
+     updateRecords();
+  });
+}
+
+
+
+function isNumber(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if ( (charCode > 31 && charCode < 48) || charCode > 57) {
+            return false;
+        }
+        return true;
+    }
+</script>
+<script>
+var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = window.location.search.substring(1),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+        }
+    }
+    return false;
+};
+function updateRecords(){
+        var Invoice_Number = getUrlParameter('Invoice_Number')
+        if (Invoice_Number != "0") {
+
+            var value = Invoice_Number;
+             $.ajax({
+            type: 'GET',
+            url: "/invoice_records?Invoice_Number="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                        $("#contentTable").empty();
+                       console.log(response)
+                       output  = ``;
+                   if (response.length > 0){
+
+                      $.each(response, function(a,b){
+
+                          output += "<tr>" +
+                          "<td><b>Date: </b>" + b.date + "</td>" +
+                              "<td><b>Description: </b>" + b.description + "</td>" +
+                              "<td><b>Amount: </b>" + b.amount + " EUR</td>" +
+                              "<td><b>Staff: </b>" + b.staff_id + "</td>" +
+
+                          "</tr>"
+                   })
+
+                   }
+ $("#contentTable").empty();
+             $("#contentTable").append(output);
+            }
+
+        });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+    }
+
+
+</script>
+<script>
+$( document ).ready(function() {
+    updateRecords()
+});
+</script>
+
+{% endblock %}
