@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -61,7 +61,51 @@ def create_prescription():
 
     return redirect(url_for('views.home'))
 
+@views.route('/prescription', methods=['GET'])
+def prescription():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        prescriptionID = request.args.get("Prescription_ID")
+        prescription_ = Prescription.query.filter_by(Prescription_ID = prescriptionID).first()
+        content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
+        medicines = Medicine.query.all()
 
+        if content and prescription:
+            return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
+                                   specifications=None, prescription_content = content, medicines = medicines)
+
+    else:
+        return redirect(url_for('views.home'))
+
+@views.route('/prescription_content_remove', methods = ['POST'])
+def prescription_content_remove():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        pc = PrescriptionContent.query.filter_by(PRecord_ID = data['PRecord_ID']).first()
+        if pc:
+            db.session.delete(pc)
+            db.session.commit()
+        return redirect(url_for('views.home'))
+@views.route('/prescription_add_content', methods=['POST'])
+def prescription_add_content():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        Prescription_ID = data["Prescription_ID"]
+        MedicineID = data["Medicine_ID"]
+        Box = data["Box"]
+
+        Prescription_ = Prescription.query.filter_by(Prescription_ID= Prescription_ID).first()
+        Medicine_ = Medicine.query.filter_by(Medicine_ID = MedicineID).first()
+        if Prescription_ and Medicine_:
+            PrescriptionContent_ = PrescriptionContent(
+                    Prescription_ID = Prescription_ID,
+                    Medicine_ID = Medicine_.Medicine_ID,
+                    Box = Box
+            )
+            db.session.add(PrescriptionContent_)
+            db.session.commit()
+        return redirect(url_for('views.home'))
 
 
 #delete schedule
@@ -283,7 +327,8 @@ def patients():
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
         # ("staff or admin user visiting appointments view")
         staff = session['Staff_ID']
-        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None)
+        diseases = Disease.query.all()
+        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None, diseases = diseases)
     else:
         return redirect(url_for('views.appointments'))
 
@@ -392,12 +437,9 @@ def list_appointments():
 @views.route('/list_time_slots', methods = ['GET'])
 def list_time_slots():
     if check_session()["Logged_In"] != False:
-
         time_slots = TimeSlot.query.all()
-
         all_slots = [{'id': str(slot.Slot_ID), 'time': str(slot.Start_Time.strftime('%H:%M')) + " - " + str(slot.End_Time.strftime('%H:%M')) } for slot in time_slots]
         return jsonify(all_slots)
-
     else:
         return redirect(url_for('auth.login'))
 
@@ -437,11 +479,91 @@ def prescription_detail(prescription_id):
     return header+text+footer
 
 
+
+@views.route('/cancel-prescription', methods = ['POST'])
+def cancel_prescription():
+    if check_session()["Logged_In"] != False  and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        prescription_id = data['Prescription_ID']
+        staff_id = session.get("Staff_ID")
+        prescription = Prescription.query.filter_by(Prescription_ID = prescription_id, Staff_ID = staff_id).first()
+        if prescription:
+            prescription.Status = 0
+            db.session.commit()
+
+    else:
+        return redirect(url_for('views.home'))
+
+
+
+#list diagnoses
+@views.route('/list_diagnoses', methods = ['GET'])
+def list_diagnoses():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        patient_id = request.args.get("Patient_ID")
+        diagnoses = Diagnose.query.filter_by(Patient_ID = patient_id).all()
+        all_diagnoses = [{'id': str(diagnose.Diagnose_ID),
+                          'disease': str(diagnose.Disease.Disease_Name),
+                          'note': str(diagnose.Note),
+                          'date' : str(datetime.strftime(diagnose.Date_Created, "%d%/%m%/%Y")),
+                          'staff' : str(diagnose.Hospital_Staff.Name + " "  + diagnose.Hospital_Staff.Surname)
+                          } for diagnose in diagnoses]
+        return jsonify(all_diagnoses)
+    else:
+        return redirect(url_for('auth.login'))
+
+
+#cancel diagnose
+@views.route('/cancel-diagnose', methods = ['POST'])
+def cancel_diagnose():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        Diagnose_ID = data['Diagnose_ID']
+        staff_id = session.get("Staff_ID")
+        diagnose = Diagnose.query.filter_by(Diagnose_ID=Diagnose_ID).first()
+        print(diagnose.Diagnose_ID)
+        if diagnose and staff_id == diagnose.Hospital_Staff.Staff_ID:
+            db.session.delete(diagnose)
+            db.session.commit()
+
+
+
+
+
+
+#add_diagnose
+@views.route('/add_diagnose', methods = ['POST'])
+def add_diagnose():
+    if check_session()["Logged_In"] != False  and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+
+        patient_id = data['Patient_ID']
+        disease_id = data["DiseaseID"]
+        note = str(data["Note"])
+        staff_id = session.get("Staff_ID")
+        if session['Staff_Role'] == 1:
+            new_diagnose = Diagnose(Patient_ID = patient_id, Disease_ID = disease_id, Note = note, Staff_ID = staff_id, Date_Created = func.now())
+            db.session.add(new_diagnose)
+            db.session.commit()
+
+
+        return redirect(url_for('auth.login'))
+
+    else:
+        return redirect(url_for('views.home'))
+
+
+
+
+
+
+
+
 @views.route('/list_prescriptions', methods = ['GET'])
 def list_prescriptions():
-    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None:
+    if check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("Patient_ID") != None and request.args.get("PrescriptionID") == None:
         patient_id = request.args.get("Patient_ID")
-        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id).all()
+        prescriptions = Prescription.query.filter_by(Patient_ID = patient_id, Status = 1 ).all()
         all_prescriptions = None
         if prescriptions:
 
@@ -450,13 +572,16 @@ def list_prescriptions():
                                   'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M'),
                                   'content': prescription_detail(prescription.Prescription_ID)
 
-
-
-
-
                              } for prescription in prescriptions]
 
         return jsonify(all_prescriptions)
+    elif check_session()["Logged_In"] == True and check_session()["Role"] != "Patient" and request.args.get("PrescriptionID") != None:
+        pid = request.args.get("PrescriptionID")
+        contents = PrescriptionContent.query.filter_by(Prescription_ID = pid).all()
+        all_content = ""
+        if contents:
+            all_content = [{'medicine':content.Medicine.Name, 'box': content.Box, 'id' : content.PRecord_ID} for content in contents]
+        return all_content
     else:
         return redirect(url_for('auth.login'))
 

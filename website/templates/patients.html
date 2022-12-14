@@ -2,8 +2,10 @@
 {% block title %}Patients{% endblock %}
 {% block head %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" rel="stylesheet">
-
+ <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css"
+    />
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
 {% endblock %}
 {% block content %}
@@ -85,26 +87,14 @@
         </div>
         <div class="card shadow mb-4" id="bottomPanel">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addDiagnose">
+  +
+</button>                            </h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-
-                                    <tbody>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-        </div>
-            <div class="card shadow mb-4" id="bottomPanel">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Invoices</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <table class="table table-bordered" id="diagnoses" width="100%" cellspacing="0">
 
                                     <tbody>
 
@@ -114,6 +104,43 @@
                         </div>
         </div>
 
+<!-- Button trigger modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="addDiagnose" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add Diagnose</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <form id="role-form"  method="get">
+            <div class="form-group col-md-12">
+    <label for="exampleFormControlTextarea1">Disease:</label>
+                <select id="disease" name="disease" class="form-control">
+                <option value='Choose...' disabled selected>Choose...</option>
+                    {% for disease in diseases %}
+                        <option value='{{ disease.Disease_ID }}'>{{ disease.Disease_Name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+              <div class="form-group col-md-12">
+    <label for="exampleFormControlTextarea1">Note:</label>
+    <textarea class="form-control" id="note" rows="3"></textarea>
+  </div>
+              <div class="clearfix"></div>
+    </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="addDiagnose()" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -125,10 +152,8 @@
     <script src="{{ url_for('static', filename='main.js') }}"></script>
     <script src="{{ url_for('static', filename='populate.js') }}"></script>
 
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
-
-
-
     <script>
     function status(x, id){
         if(x == 1){
@@ -154,7 +179,7 @@
   });
     }
 
-        function createPrescription_POST(Patient_ID, Staff_ID) {
+    function createPrescription_POST(Patient_ID, Staff_ID) {
           fetch("/create_prescription", {
             method: "POST",
             body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID  }),
@@ -162,6 +187,29 @@
              updatePrescriptions();
           });
     }
+
+
+    function addDiagnose_POST(Patient_ID, Staff_ID, DiseaseID, Note) {
+
+          fetch("/add_diagnose", {
+            method: "POST",
+            body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID, DiseaseID:DiseaseID, Note : Note  }),
+          }).then((_res) => {
+             updateDiagnoses();
+          });
+    }
+    function addDiagnose() {
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        var staffID = {{ staff }};
+        var DiseaseID =  $('select#disease').find('option:selected').attr("value");
+        var note =  $('textarea#note').val();
+
+        if (patient_ID != 0 && DiseaseID != 0){
+
+            addDiagnose_POST(patient_ID,staffID, DiseaseID, note.toString())
+        }
+    }
+
 
 
     function createPrescription() {
@@ -176,9 +224,95 @@
         }
     }
 
+    function cancelPrescription(Prescription_ID) {
+      fetch("/cancel-prescription", {
+        method: "POST",
+        body: JSON.stringify({ Prescription_ID: Prescription_ID }),
+      }).then((_res) => {
+        updatePage();
+          updatePrescriptions();
+      });
+    }
+
+
+
+
+    function cancelDiagnose(Diagnose_ID) {
+      fetch("/cancel-diagnose", {
+        method: "POST",
+        body: JSON.stringify({ Diagnose_ID: Diagnose_ID }),
+      }).then((_res) => {
+          updatePage();
+          updateDiagnoses();
+      });
+    }
+
+
+    function updateDiagnoses(){
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        if (patient_ID != "Choose..."){
+            $("#diagnoses").empty();
+            var value = patient_ID;
+
+             $.ajax({
+            type: 'GET',
+            url: "/list_diagnoses?Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#diagnoses").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff</td>
+                                            <td>Disease</td>
+                                            <td>Note</td>
+                                            <td>Actions</td>
+
+
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+
+                             "<td>"+b.disease+"</td>" +
+                             "<td>"+b.note+"</td>" +
+                             "<td>" +
+                             "</i></a>&nbsp" +
+                             "<a  onclick='cancelDiagnose("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
+                             "</td>"+
+
+                             "</tr>";
+
+
+                   })
+                       $("#diagnoses").empty();
+                     $("#diagnoses").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
+
+        }
+
+    }
     function updatePrescriptions(){
         var patient_ID = $('select#patient').find('option:selected').attr("value");
-        console.log(patient_ID)
+
         if (patient_ID != "Choose...") {
              $("#prescriptionsTable").empty();
 
@@ -209,10 +343,10 @@
                               "<td>"+b.staff_name+"</td>" +
                              "<td>"+b.content+"</td>" +
                              "<td>" +
-                             "<a href='https://unsplash.it/1200/768?image=261'  data-toggle='lightbox'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
+                             "<a  onclick='updatePrescriptions()' class='btn btn-info btn-circle btn-sm'> <i class='fas fa-info-circle'></i></a>&nbsp;" +
+                             "<a data-fancybox data-type='iframe' href='http://127.0.0.1:5000/prescription?PrescriptionID="+b.id+"'  target='_blank'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
                              "</i></a>&nbsp" +
-                             "<a class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'>" +
-                             "</i></a>" +
+                             "<a  onclick='cancelPrescription("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
                              "</td>"+
 
                              "</tr>";
@@ -392,6 +526,7 @@
                    })
                        $("#dataTable").empty();
                      $("#dataTable").append(output);
+                     updateDiagnoses();
 
 
 
@@ -418,11 +553,7 @@
 
 
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js"></script>
-    <script>
-                $(document).on('click', '[data-toggle="lightbox"]', function(event) {
-                event.preventDefault();
-                $(this).ekkoLightbox();
-            });
-    </script>
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
+
 {% endblock %}

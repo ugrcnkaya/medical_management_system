@@ -1,0 +1,199 @@
+{% extends "base_no_sidebar.html" %}
+
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+                    <!--New Appointment -->
+
+                      <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Add Into Prescription</h6>
+                        </div>
+                        <div class="card-body">
+
+
+                            <!-- Appointment Form -->
+
+
+                            <form>
+  <div class="form-group">
+  <input type="hidden" id="PrescriptionID" name="PrescriptionID" value="" />
+          <label for="patient">Medicine</label>
+      <select id="medicine" name="medicine" class="form-control">
+      <option value="">Select a medicine...</option>
+              {% for medicine in medicines %}
+                <option value="{{ medicine.Medicine_ID }}">{{ medicine.Name }}</option>
+            {% endfor %}
+      </select>
+<hr>
+            <label for="patient">Number of Box:</label>
+
+
+<input type="text" class="form-control" id="box" name="box" value="" id="onlyNumbers" name="onlyNumbers" onkeypress="return isNumber(event)" onpaste="return false;"/>
+<hr>
+
+  <button onclick="addPrescriptionContent()" class="btn btn-success"><span aria-hidden="true">Add</span></button>
+
+
+  </div>
+
+
+</form>
+
+
+
+                        </div>
+                    </div>
+
+<div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" style="border:0!important;" id="contentTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+
+
+
+
+function removeContent(PRecord_ID) {
+  fetch("/prescription_content_remove", {
+    method: "POST",
+    body: JSON.stringify({ PRecord_ID: PRecord_ID }),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+function addPrescriptionContent() {
+
+    var Prescription_ID = getUrlParameter('PrescriptionID');
+    $("#PrescriptionID").val(Prescription_ID);
+    var medicineID = $('#medicine').val();
+    var box = $('#box').val();
+  fetch("/prescription_add_content", {
+    method: "POST",
+    body: JSON.stringify({ Prescription_ID: Prescription_ID, Medicine_ID :medicineID, Box: box  }),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+
+
+
+function isNumber(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if ( (charCode > 31 && charCode < 48) || charCode > 57) {
+            return false;
+        }
+        return true;
+    }
+</script>
+<script>
+var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = window.location.search.substring(1),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+        }
+    }
+    return false;
+};
+    function updatePrescriptions(){
+        var PrescriptionID = getUrlParameter('PrescriptionID')
+
+
+        if (PrescriptionID != "0") {
+
+            var value = PrescriptionID;
+             $.ajax({
+            type: 'GET',
+            url: "/list_prescriptions?PrescriptionID="+PrescriptionID,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                        $("#contentTable").empty();
+                       console.log(response)
+                       output  = ``;
+                   if (response.length > 0){
+
+                      $.each(response, function(a,b){
+
+                          output += "<tr>" +
+                          "<td>" + b.box + "x "+b.medicine +
+                          "</td>" +
+                          "<td>" +
+                          "<a onclick='removeContent(" + b.id + ")'  class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>" +
+                          "</td>" +
+                          "</tr>"
+                   })
+
+                   }
+ $("#contentTable").empty();
+             $("#contentTable").append(output);
+            }
+
+        });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+    }
+
+
+</script>
+<script>
+$( document ).ready(function() {
+    updatePrescriptions()
+});
+</script>
+
+{% endblock %}
