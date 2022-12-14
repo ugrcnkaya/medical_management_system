@@ -87,7 +87,10 @@
         </div>
         <div class="card shadow mb-4" id="bottomPanel">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addDiagnose">
+  +
+</button>                            </h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -101,6 +104,55 @@
                         </div>
         </div>
 
+<!-- Button trigger modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="addDiagnose" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add Diagnose</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+
+
+          <form id="role-form"  method="get">
+
+            <div class="form-group col-md-12">
+    <label for="exampleFormControlTextarea1">Disease:</label>
+
+                <select id="role" name="role" class="form-control">
+
+                    <option value='Choose...' disabled selected>Choose...</option>
+                    <option value='2'></option>
+                </select>
+            </div>
+              <div class="form-group col-md-12">
+    <label for="exampleFormControlTextarea1">Note:</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+  </div>
+
+            <div class="clearfix"></div>
+
+
+    </form>
+
+
+
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -175,6 +227,56 @@
         if (patient_ID != "Choose..."){
             $("#diagnoses").empty();
             var value = patient_ID;
+
+             $.ajax({
+            type: 'GET',
+            url: "/list_diagnoses?Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#diagnoses").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff</td>
+                                            <td>Disease</td>
+                                            <td>Actions</td>
+
+
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+                             "<td>"+b.disease+"</td>" +
+                             "<td>" +
+                             "</i></a>&nbsp" +
+                             "<a  onclick='cancelDiognese("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
+                             "</td>"+
+
+                             "</tr>";
+
+
+                   })
+                       $("#diagnoses").empty();
+                     $("#diagnoses").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
 
         }
 
@@ -395,6 +497,7 @@
                    })
                        $("#dataTable").empty();
                      $("#dataTable").append(output);
+                     updateDiagnoses();
 
 
 

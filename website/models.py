@@ -196,6 +196,7 @@ class Diagnose(db.Model):
     Diagnose_ID = Column(Integer, primary_key=True)
     Patient_ID = Column(ForeignKey('Patients.Patient_ID'), index=True)
     Disease_ID = Column(ForeignKey('Diseases.Disease_ID'), index=True)
+    Note = Column(String)
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), nullable=False, index=True)
     Date_Created = Column(TIMESTAMP, server_default=func.now())
     Disease = relationship('Disease')

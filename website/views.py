@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -436,12 +436,9 @@ def list_appointments():
 @views.route('/list_time_slots', methods = ['GET'])
 def list_time_slots():
     if check_session()["Logged_In"] != False:
-
         time_slots = TimeSlot.query.all()
-
         all_slots = [{'id': str(slot.Slot_ID), 'time': str(slot.Start_Time.strftime('%H:%M')) + " - " + str(slot.End_Time.strftime('%H:%M')) } for slot in time_slots]
         return jsonify(all_slots)
-
     else:
         return redirect(url_for('auth.login'))
 
@@ -498,6 +495,21 @@ def cancel_prescription():
 
 
 
+#list diagnoses
+@views.route('/list_diagnoses', methods = ['GET'])
+def list_diagnoses():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        patient_id = request.args.get("Patient_ID")
+        diagnoses = Diagnose.query.filter_by(Patient_ID = patient_id).all()
+        all_diagnoses = [{'id': str(diagnose.Diagnose_ID),
+                          'disease': str(diagnose.Disease.Disease_Name),
+                          'date' : str(datetime.strftime(diagnose.Date_Created, "%d%/%m%/%Y")),
+                          'staff' : str(diagnose.Hospital_Staff.Name + " "  + diagnose.Hospital_Staff.Surname)
+                          } for diagnose in diagnoses]
+        return jsonify(all_diagnoses)
+    else:
+        return redirect(url_for('auth.login'))
+
 
 
 
@@ -515,10 +527,6 @@ def list_prescriptions():
                                   'staff_name': prescription.Hospital_Staff.Name + " " + prescription.Hospital_Staff.Surname,
                                   'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M'),
                                   'content': prescription_detail(prescription.Prescription_ID)
-
-
-
-
 
                              } for prescription in prescriptions]
 
