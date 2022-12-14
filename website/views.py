@@ -3,7 +3,7 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose
+from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -327,7 +327,8 @@ def patients():
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
         # ("staff or admin user visiting appointments view")
         staff = session['Staff_ID']
-        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None)
+        diseases = Disease.query.all()
+        return render_template("patients.html", role="staff", staff=staff, patient= None, appointments=None, specifications = None, diseases = diseases)
     else:
         return redirect(url_for('views.appointments'))
 
@@ -503,12 +504,55 @@ def list_diagnoses():
         diagnoses = Diagnose.query.filter_by(Patient_ID = patient_id).all()
         all_diagnoses = [{'id': str(diagnose.Diagnose_ID),
                           'disease': str(diagnose.Disease.Disease_Name),
+                          'note': str(diagnose.Note),
                           'date' : str(datetime.strftime(diagnose.Date_Created, "%d%/%m%/%Y")),
                           'staff' : str(diagnose.Hospital_Staff.Name + " "  + diagnose.Hospital_Staff.Surname)
                           } for diagnose in diagnoses]
         return jsonify(all_diagnoses)
     else:
         return redirect(url_for('auth.login'))
+
+
+#cancel diagnose
+@views.route('/cancel-diagnose', methods = ['POST'])
+def cancel_diagnose():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        data = json.loads(request.data)
+        Diagnose_ID = data['Diagnose_ID']
+        staff_id = session.get("Staff_ID")
+        diagnose = Diagnose.query.filter_by(Diagnose_ID=Diagnose_ID).first()
+        print(diagnose.Diagnose_ID)
+        if diagnose and staff_id == diagnose.Hospital_Staff.Staff_ID:
+            db.session.delete(diagnose)
+            db.session.commit()
+
+
+
+
+
+
+#add_diagnose
+@views.route('/add_diagnose', methods = ['POST'])
+def add_diagnose():
+    if check_session()["Logged_In"] != False  and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+
+        patient_id = data['Patient_ID']
+        disease_id = data["DiseaseID"]
+        note = str(data["Note"])
+        staff_id = session.get("Staff_ID")
+        if session['Staff_Role'] == 1:
+            new_diagnose = Diagnose(Patient_ID = patient_id, Disease_ID = disease_id, Note = note, Staff_ID = staff_id, Date_Created = func.now())
+            db.session.add(new_diagnose)
+            db.session.commit()
+
+
+        return redirect(url_for('auth.login'))
+
+    else:
+        return redirect(url_for('views.home'))
+
+
 
 
 

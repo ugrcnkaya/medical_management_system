@@ -118,37 +118,25 @@
         </button>
       </div>
       <div class="modal-body">
-
-
-
           <form id="role-form"  method="get">
-
             <div class="form-group col-md-12">
     <label for="exampleFormControlTextarea1">Disease:</label>
-
-                <select id="role" name="role" class="form-control">
-
-                    <option value='Choose...' disabled selected>Choose...</option>
-                    <option value='2'></option>
+                <select id="disease" name="disease" class="form-control">
+                <option value='Choose...' disabled selected>Choose...</option>
+                    {% for disease in diseases %}
+                        <option value='{{ disease.Disease_ID }}'>{{ disease.Disease_Name }}</option>
+                    {% endfor %}
                 </select>
             </div>
               <div class="form-group col-md-12">
     <label for="exampleFormControlTextarea1">Note:</label>
-    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+    <textarea class="form-control" id="note" rows="3"></textarea>
   </div>
-
-            <div class="clearfix"></div>
-
-
+              <div class="clearfix"></div>
     </form>
-
-
-
-
-
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" onclick="addDiagnose()" class="btn btn-primary">Save</button>
       </div>
     </div>
   </div>
@@ -191,7 +179,7 @@
   });
     }
 
-        function createPrescription_POST(Patient_ID, Staff_ID) {
+    function createPrescription_POST(Patient_ID, Staff_ID) {
           fetch("/create_prescription", {
             method: "POST",
             body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID  }),
@@ -199,6 +187,29 @@
              updatePrescriptions();
           });
     }
+
+
+    function addDiagnose_POST(Patient_ID, Staff_ID, DiseaseID, Note) {
+
+          fetch("/add_diagnose", {
+            method: "POST",
+            body: JSON.stringify({ Patient_ID: Patient_ID,Staff_ID: Staff_ID, DiseaseID:DiseaseID, Note : Note  }),
+          }).then((_res) => {
+             updateDiagnoses();
+          });
+    }
+    function addDiagnose() {
+        var patient_ID = $('select#patient').find('option:selected').attr("value");
+        var staffID = {{ staff }};
+        var DiseaseID =  $('select#disease').find('option:selected').attr("value");
+        var note =  $('textarea#note').val();
+
+        if (patient_ID != 0 && DiseaseID != 0){
+
+            addDiagnose_POST(patient_ID,staffID, DiseaseID, note.toString())
+        }
+    }
+
 
 
     function createPrescription() {
@@ -222,6 +233,21 @@
           updatePrescriptions();
       });
     }
+
+
+
+
+    function cancelDiagnose(Diagnose_ID) {
+      fetch("/cancel-diagnose", {
+        method: "POST",
+        body: JSON.stringify({ Diagnose_ID: Diagnose_ID }),
+      }).then((_res) => {
+          updatePage();
+          updateDiagnoses();
+      });
+    }
+
+
     function updateDiagnoses(){
         var patient_ID = $('select#patient').find('option:selected').attr("value");
         if (patient_ID != "Choose..."){
@@ -244,6 +270,7 @@
                                             <td>Date</td>
                                             <td>Staff</td>
                                             <td>Disease</td>
+                                            <td>Note</td>
                                             <td>Actions</td>
 
 
@@ -253,10 +280,12 @@
                          output += "<tr>" +
                              "<td>"+b.date+"</td>" +
                               "<td>"+b.staff+"</td>" +
+
                              "<td>"+b.disease+"</td>" +
+                             "<td>"+b.note+"</td>" +
                              "<td>" +
                              "</i></a>&nbsp" +
-                             "<a  onclick='cancelDiognese("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
+                             "<a  onclick='cancelDiagnose("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
                              "</td>"+
 
                              "</tr>";
