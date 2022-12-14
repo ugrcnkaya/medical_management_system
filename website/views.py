@@ -76,11 +76,30 @@ def invoice_payments():
                         'date' : str(datetime.strftime(record.Payment_Date, '%d-%m-%Y %H:%M')),
                         'payment_id': str(record.Payment_ID),
                         'description': str(record.Description),
-                        'amount': str(record.Payment_Amount)
+                        'amount': str(record.Payment_Amount),
+                         'staff': str(record.Hospital_Staff.Name) + " " + str(record.Hospital_Staff.Surname) + " ID: " + str(record.Hospital_Staff.Staff_ID)
                           } for record in payments]
         return jsonify(all_records)
     else:
         return redirect(url_for('auth.login'))
+
+@views.route('/add_invoice', methods = ['POST'])
+def add_invoice():
+    staff = session['Staff_ID']
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        patient_id = data["Patient_ID"]
+        due_date  = data["Due_Date"]
+        due_date = datetime.strptime(due_date, "%d/%m/%Y")
+
+        new_invoice = Invoice(Patient_ID = patient_id, Due_Date = due_date, Creation_Date = func.now())
+        db.session.add(new_invoice)
+        db.session.commit()
+
+        print(patient_id, due_date)
+        return render_template("add_payment.html", role="staff", staff=staff)
+    else:
+        return redirect(url_for('views.home'))
 
 
 
@@ -145,6 +164,36 @@ def add_record():
             db.session.add(inv_record_new)
             db.session.commit()
         return render_template("add_record.html", role="staff", staff=staff)
+    else:
+        return redirect(url_for('views.home'))
+
+##add payments
+
+@views.route('/add_payment', methods=['GET', 'POST'])
+def add_payment():
+    staff = session['Staff_ID']
+
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
+        # ("staff or admin user visiting appointments view")
+       return render_template("add_payment.html", role="staff", staff=staff)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        inv_number = data["Invoice_Number"]
+        inv = Invoice.query.filter_by(Invoice_Number = inv_number).first()
+        print(inv_number)
+        if inv:
+            data = json.loads(request.data)
+            description = data["Description"]
+            amount = data["Amount"]
+            new_payment = Payment(Invoice_Number = inv_number, Staff_ID = staff,
+                                  Description = description, Payment_Amount = float(amount),
+                                  Payment_Date = func.now()
+                                  )
+
+
+            db.session.add(new_payment)
+            db.session.commit()
+        return render_template("add_payment.html", role="staff", staff=staff)
     else:
         return redirect(url_for('views.home'))
 

@@ -21,7 +21,12 @@
 
                     <div class="card shadow mb-2">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Invoice List</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Invoice List
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addInvoice">
+                                    +
+                            </button>
+
+                            </h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -69,6 +74,7 @@
                                                 <span class="text">Add Payment</span>
                                             </a>
 
+
                                         </td>
                                         </tr>
 {% endfor %}
@@ -109,6 +115,7 @@
 
                                <br>
                                 <br>
+                                Records: <br> <br>
                                 <table class="table table-bordered" id="dataTable2" width="100%" cellspacing="0">
 
 
@@ -121,6 +128,7 @@
                                     </tbody>
                                 </table>
                                 <hr>
+                                Payments: <br> <br>
                                  <table class="table table-bordered" id="dataTable3" width="100%" cellspacing="0">
 
 
@@ -141,7 +149,42 @@
 
     </div>
 
+<!-- Modal -->
+<div class="modal fade" id="addInvoice" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add Invoice</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <form id="role-form"  method="get">
+            <div class="form-group col-md-12">
+    <label for="exampleFormControlTextarea1">Patient:</label>
+               <select id="patient" name="patient" class="form-control" required>
+                        <option value="">Select a patient...</option>
+               </select>
+ <hr>
 
+<label for="Date">Due Date</label>
+        <input class="form-control" id="date" name="date" placeholder="dd/mm/yyyy" type="text" required />
+
+
+
+
+            </div>
+
+              <div class="clearfix"></div>
+    </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="addInvoice()" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -152,10 +195,81 @@
     <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
     <script src="{{ url_for('static', filename='populate.js') }}"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+<script>
+
+
+
+function addInvoice() {
+
+    var patient = $('#patient').val();
+    var date = $('#date').val();
+
+    if(patient == 0){
+        location.reload();
+        return 0;
+    }
+  fetch("/add_invoice", {
+    method: "POST",
+    body: JSON.stringify({ Patient_ID: patient, Due_Date: date}),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+    $(document).ready(function(){
+      var date_input=$('input[name="date"]'); //our date input has the name "date"
+      var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
+      var options={
+        format: 'dd/mm/yyyy',
+        container: container,
+        todayHighlight: true, todayBtn: "linked",
+         clearBtn: true,
+         autoclose: true,
+          todayHighlight: true,
+          startDate: '+1d',
+        autoclose: true,
+
+      };
+      date_input.datepicker(options);
+    })
+</script>
+     <script>
+     $(document).ready(function(){
+         $("#invDetailsTab").hide();
+
+             $.ajax({
+            type: 'GET',
+            url: "/list_patients",
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 $("#patient").empty();
+
+                   var output = "<option  value=\"0\" disabled selected>Choose...</option>";
+                   $.each(response, function(a,b){
+
+                         output += "<option value="+(b.id).toUpperCase()+">"+(b.desc).toUpperCase()+"</option>";
+                   })
+                $("#patient").append(output);
+                       $('#patient').selectize({
+                                  sortField: 'text'
+                            });
+            }
+        });
+     });
+
+
+
+ </script>
     <script>
 
  function showDetails(Invoice_Number){
@@ -213,7 +327,7 @@
 
             $.ajax({
                 type: 'GET',
-                url: "/invoice_records?Invoice_Number=" + value,
+                url: "/payments?Invoice_Number=" + value,
                 //data: { Specification: Specification },
                 contentType: 'application/json',
                 dataType: 'json',
@@ -226,16 +340,21 @@
                         output = `<thead>
                                         <tr>
                                             <th>Payment Date</th>
-                                            <th>Amount</th>
+                                            <th>Staff</th>
                                             <th>Description</th>
+                                            <th>Amount</th>
+
 
                                         </tr>
                                     </thead>`;
                         $.each(response, function (a, b) {
                             output += "<tr>" +
+
                                 "<td>" + b.date + "</td>" +
-                                "<td>" + b.amount + "</td>" +
+                                "<td>" + b.staff + "</td>" +
                                 "<td>" + b.description + "</td>" +
+                                "<td>" + b.amount + "</td>" +
+
 
                                 "</tr>";
 
@@ -256,14 +375,17 @@
 
 
 
-$(document).ready(function() {
-    $("#invDetailsTab").hide();
-});
+
 
 function hideDetails(){
     $("#invDetailsTab").hide();
 }
 
+
+
     </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+
 
 {% endblock %}
