@@ -586,6 +586,26 @@ def list_patients():
 #list_prescriptions
 
 
+@views.route('/prescription', methods=['GET'])
+def prescription():
+    #add prescription
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        prescriptionID = request.args.get("Prescription_ID")
+        prescription_ = Prescription.query.filter_by(Prescription_ID = prescriptionID).first()
+        content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
+        medicines = Medicine.query.all()
+
+        if content and prescription:
+            return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
+                                   specifications=None, prescription_content = content, medicines = medicines)
+
+    else:
+        return redirect(url_for('views.home'))
+
+
+
 # in order to return the content of the prescription from other table
 def prescription_detail(prescription_id):
     contents = PrescriptionContent.query.filter_by(Prescription_ID = prescription_id).all()
