@@ -63,6 +63,7 @@ def create_prescription():
 
 @views.route('/prescription', methods=['GET'])
 def prescription():
+    #add prescription
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
         # ("staff or admin user visiting appointments view")
         staff = session['Staff_ID']
