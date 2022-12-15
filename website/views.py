@@ -3,11 +3,13 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
-from .models import Patient, Appointment, Specification, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
+from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
 from datetime import datetime
+from werkzeug.security import generate_password_hash,check_password_hash
+
 
 
 views = Blueprint('views', __name__)
@@ -43,6 +45,50 @@ def staff():
     else:
         return redirect(url_for('views.home'))
 
+
+@views.route('/manage', methods=['GET', 'POST'])
+def showstaff():
+
+    if request.method == 'POST':
+        if request.form.get('Specification_ID') == "2":
+            rt = 2
+        elif request.form.get('Specification_ID') == "3":
+            rt = 3
+        elif request.form.get('Specification_ID') == "4":
+            rt = 4
+        else:
+            rt = 1
+
+        if request.form.get('Role') == "2":
+            rt = 2
+        else:
+            rt = 1
+
+        new_staff = HospitalStaff(
+                        Name=request.form.get('Name'),
+                        Surname=request.form.get('Surname'),
+                        Specification_ID=request.form.get('Specification_ID'),
+                        Role=request.form.get('Role'),
+                        EMail=request.form.get('EMail'),
+                        Password = generate_password_hash(request.form.get('Password'), method='sha256')
+                          )
+
+        db.session.add(new_staff)
+        db.session.commit()
+
+
+        Hospital_Staff = db.session.query(HospitalStaff).all()
+        return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin")
+
+    Hospital_Staff = db.session.query(HospitalStaff).all()
+    return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin")
+
+@views.route('/deletestaff/<int:id>', methods=['POST'])
+def deletestaff(id):
+    staff_to_delete = db.session.query(HospitalStaff).get(id)
+    db.session.delete(staff_to_delete)
+    db.session.commit()
+    return redirect('/manage')
 
 #create new prescription
 @views.route('/create_prescription', methods = ['POST'])
@@ -273,6 +319,8 @@ def showrooms():
 
     rooms = db.session.query(Room).all()
     return render_template('rooms.html',rooms=rooms, role="admin")
+
+
 
 @views.route('/deleteroom/<int:id>', methods=['POST'])
 def deleteroom(id):

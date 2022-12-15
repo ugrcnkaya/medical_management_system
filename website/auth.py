@@ -1,14 +1,17 @@
+import re
+
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from .models import Patient, HospitalStaff,SystemConfig
 from . import db
 from werkzeug.security import generate_password_hash,check_password_hash
 auth = Blueprint('auth', __name__)
 
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$')
+
 @auth.route('/login', methods = ['GET', 'POST'])
 def login():
     if check_session()["Logged_In"] == True:
         return redirect(url_for('views.home'))
-
 
     if request.method == 'POST':
 
@@ -25,6 +28,7 @@ def login():
                 session['Admin_E-Mail'] = system_admin.Admin_E_Mail
                 print("Admin login successfull.")
                 return redirect(url_for('views.admin'))
+
         if staff:
             if check_password_hash(staff.Password, password):
 
@@ -48,9 +52,17 @@ def login():
             else:
                 print("fail")
                 flash('Error logging in', category="error")
+
+
+        elif not EMAIL_REGEX.match('email'):
+            flash('Invalid Email address!', category='error')
+
         else:
             flash('Here', category="error")
             # text = argument to send towards the template
+
+
+
     return render_template("login.html")
 
 
@@ -86,8 +98,8 @@ def sign_up():
         patient = Patient.query.filter_by(E_Mail=email).first()
         if patient:
             flash('Email already exists.', category='error')
-        elif len(email)  < 4:
-            flash('E-Mail must be greater than 3 characters.', category='error')
+        elif not EMAIL_REGEX.match('email'):
+            flash('Invalid Email address!', category='error')
         elif len(firstName) < 2:
             flash('First name must be greater than 1 characters.', category='error')
         elif password1 != password2:
