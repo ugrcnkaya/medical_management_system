@@ -4,7 +4,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from . import db
 import json
 
-from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease, InvoiceRecord, Payment
+from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease, InvoiceRecord, Payment, Invoice
+
 
 from .auth import check_session
 from sqlalchemy import text
@@ -64,6 +65,25 @@ def invoice_records():
                         'amount': str(record.Amount)
                           } for record in invoice_records]
         return jsonify(all_records)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+        inv_no = request.args.get("Invoice_Number")
+        patient_id = session.get("Patient_ID")
+        invoice = Invoice.query.filter_by(Invoice_Number=inv_no, Patient_ID = patient_id).all()
+        if invoice:
+            #if that invoice is actually assigned to logged in patient
+          invoice_records = InvoiceRecord.query.filter_by(Invoice_Number=inv_no).all()
+
+        all_records = [{
+            'date': str(datetime.strftime(record.Create_Date, '%d-%m-%Y %H:%M')),
+            'record_id': str(record.Record_ID),
+            'invoice_number': str(record.Invoice_Number),
+            'staff_id': record.Hospital_Staff.Name + " " + record.Hospital_Staff.Surname + " (ID:" + str(
+                record.Hospital_Staff.Staff_ID) + ")",
+            'description': str(record.Description),
+            'amount': str(record.Amount)
+        } for record in invoice_records]
+        return jsonify(all_records)
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -84,6 +104,26 @@ def invoice_payments():
                          'staff': str(record.Hospital_Staff.Name) + " " + str(record.Hospital_Staff.Surname) + " ID: " + str(record.Hospital_Staff.Staff_ID)
                           } for record in payments]
         return jsonify(all_records)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+
+        inv_no = request.args.get("Invoice_Number")
+        patient_id = session.get("Patient_ID")
+        invoice = Invoice.query.filter_by(Invoice_Number=inv_no, Patient_ID=patient_id).all()
+        payments = Payment.query.filter_by(Invoice_Number=inv_no).all()
+        if invoice:
+            all_records = [{
+                'date': str(datetime.strftime(record.Payment_Date, '%d-%m-%Y %H:%M')),
+                'payment_id': str(record.Payment_ID),
+                'description': str(record.Description),
+                'amount': str(record.Payment_Amount),
+                'staff': str(record.Hospital_Staff.Name) + " " + str(record.Hospital_Staff.Surname) + " ID: " + str(
+                    record.Hospital_Staff.Staff_ID)
+            } for record in payments]
+
+
+            return jsonify(all_records)
+
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -714,6 +754,17 @@ def list_diagnoses():
                           'staff' : str(diagnose.Hospital_Staff.Name + " "  + diagnose.Hospital_Staff.Surname)
                           } for diagnose in diagnoses]
         return jsonify(all_diagnoses)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+        patient_id = session.get("Patient_ID")
+        diagnoses = Diagnose.query.filter_by(Patient_ID=patient_id).all()
+        all_diagnoses = [{'id': str(diagnose.Diagnose_ID),
+                          'disease': str(diagnose.Disease.Disease_Name),
+                          'note': str(diagnose.Note),
+                          'date': str(datetime.strftime(diagnose.Date_Created, "%d%/%m%/%Y")),
+                          'staff': str(diagnose.Hospital_Staff.Name + " " + diagnose.Hospital_Staff.Surname)
+                          } for diagnose in diagnoses]
+        return jsonify(all_diagnoses)
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -787,6 +838,19 @@ def list_prescriptions():
         if contents:
             all_content = [{'medicine':content.Medicine.Name, 'box': content.Box, 'id' : content.PRecord_ID} for content in contents]
         return all_content
+    elif check_session()["Logged_In"] == True and check_session()["Role"] == "Patient" :
+        patient_id = session.get("Patient_ID")
+        prescriptions = Prescription.query.filter_by(Patient_ID=patient_id, Status=1).all()
+        all_prescriptions = None
+        if prescriptions:
+            all_prescriptions = [{'id': str(prescription.Prescription_ID),
+                                  'staff_name': prescription.Hospital_Staff.Name + " " + prescription.Hospital_Staff.Surname,
+                                  'date_created': datetime.strftime(prescription.Prescription_Date, '%d/%m/%Y, %H:%M'),
+                                  'content': prescription_detail(prescription.Prescription_ID)
+
+                                  } for prescription in prescriptions]
+        return jsonify(all_prescriptions)
+
     else:
         return redirect(url_for('auth.login'))
 
@@ -808,3 +872,19 @@ def dischargeadmission(id):
         return redirect('/login')
     
     
+
+
+
+@views.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient" and request.method != 'POST':
+        # ("staff or admin user visiting appointments view")
+
+        patient_id = session.get("Patient_ID")
+        sql = text("select * from V_Appointments WHERE Patient_ID = " + str(patient_id))
+        appointments = db.engine.execute(sql)
+        sql = text("select * from V_Invoices where Patient_ID = " + str(patient_id))
+        invoices = db.engine.execute(sql)
+        return render_template("patients_profile.html", role="patient", patient= patient_id, appointments = appointments, invoices = invoices )
+    else:
+        return redirect(url_for('views.patients'))
