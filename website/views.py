@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from . import db
 import json
 
-from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
+from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease, InvoiceRecord
 
 from .auth import check_session
 from sqlalchemy import text
