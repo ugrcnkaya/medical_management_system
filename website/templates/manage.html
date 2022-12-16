@@ -26,7 +26,7 @@
                             <th>Staff_Specification</th>
                             <th>Staff_Role</th>
                             <th>Staff_Email</th>
-                            <th>Staff_Password</th>
+
                             
 
                         </tr>
@@ -39,10 +39,10 @@
                             <td>{{ staff.Staff_ID }}</td>
                             <td>{{ staff.Name }}</td>
                             <td>{{ staff.Surname }}</td>
-                            <td>{{ staff.Specification_ID }}</td>
-                            <td>{{ staff.Role }}</td>
+                            <td>{{ staff.Specification.Title }}</td>
+                            <td>{{ staff.Role1.Description }}</td>
                             <td>{{ staff.EMail }}</td>
-                            <td>{{ staff.Password }}</td>
+
                     
                             <td>
                                 <form action="{{ url_for('views.deletestaff', id=staff.Staff_ID) }}" method="POST">
