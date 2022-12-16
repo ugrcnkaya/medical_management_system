@@ -16,65 +16,6 @@
 
 
            <h1 class="h3 mb-4 text-gray-800">Profile</h1>
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Appointments</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Name</th>
-                                            <th>Specification</th>
-                                            <th>Type</th>
-                                            <th>Room</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                      {% for appointment in appointments %}
-                                        <tr>
-                                        <td> {{ appointment.Schedule_Date.strftime('%d/%m/%Y') }} @ {{ appointment.Start_Time }} - {{ appointment.End_Time }}</td>
-                                            <td>{{ appointment.Staff_Name }}</td>
-                                            <td>{{ appointment.Specification }}</td>
-                                            <td>{{ appointment.Type }}</td>
-                                            <td> {{ appointment.Room }}</td>
-                                            <td>
-                                            {% if appointment.Status == 1 %}
-                                                Active
-
-                                                <button style="color:red!important;" type="button" class ="close" onClick="if(confirm('Do you want to the cancel the following appointment? \n {{ appointment.Schedule_Date.strftime('%d/%m/%Y')  }} - {{ appointment.Staff_Name }} \n  {{ appointment.Specification }} ')) cancelAppointment({{ appointment.Appointment_ID }})">
-                                                <span aria-hidden="true">&times;</span>
-
-                                                </button>
-                                            {% elif appointment.Status == 0 %}
-                                                Cancelled
-                                            {% elif appointment.Status == 2 %}
-                                                Completed
-                                            {% elif appointment.Status == 3 %}
-                                                Past Appointment
-                                            {% endif %}</td>
-
-
-
-
-
-
-
-
-
-
-
-                                        </tr>
-                                         {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
 
 
         <div class="card shadow mb-4" id="bottomPanel">
