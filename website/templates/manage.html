@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title%} Manage {% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <h1 class="h3 mb-2 text-gray-800">Manage Staff</h1>
+
+
+
+
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Manage Hospital Staff</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Staff_ID</th>
+                            <th>Staff First Name</th>
+                            <th>Staff Surname</th>
+                            <th>Staff_Specification</th>
+                            <th>Staff_Role</th>
+                            <th>Staff_Email</th>
+                            <th>Staff_Password</th>
+                            
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                
+                        {% for staff in Hospital_Staff %}
+  
+                        <tr>
+                            <td>{{ staff.Staff_ID }}</td>
+                            <td>{{ staff.Name }}</td>
+                            <td>{{ staff.Surname }}</td>
+                            <td>{{ staff.Specification_ID }}</td>
+                            <td>{{ staff.Role }}</td>
+                            <td>{{ staff.EMail }}</td>
+                            <td>{{ staff.Password }}</td>
+                    
+                            <td>
+                                <form action="{{ url_for('views.deletestaff', id=staff.Staff_ID) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    
+                                </form>
+                                
+                            </td>
+                        </tr>
+
+                        {%endfor%}
+                        
+                       
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myhsadd">Add a Hospital Staff</button>
+
+
+                    <!-- docadd -->
+                    <div id="myhsadd" class="modal fade" role="dialog">
+                      <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h3 align="center">Enter Staff Details</h3>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <!-- <h4 class="modal-title">Modal Header</h4> -->
+                          </div>
+                          <div class="modal-body">
+                            <form method="post">
+                                <div class="form-group">
+                                    <label for="staff_name">Staff First Name</label>
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="Name"
+                                        name="Name"
+                                        placeholder="Enter Staff Name"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff_surname">Staff Surname</label>
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="Surname"
+                                        name="Surname"
+                                        placeholder="Enter Staff Surname"
+                                    />
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="specification_type">Specialization Type</label>
+                                    <select class="form-control" 
+                                        id="Specification_ID"
+                                        name="Specification_ID"
+                                        placeholder="Select Specialization Type">
+                                    <!-- <option value="blank"></option> -->
+                                    <option value="1" selected>Praktikent</option >
+                                    <option value="2">Cardiology</option>
+                                    <option value="3">Allergy</option>
+                                    <option value="4">Nurse</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="role_type">role Type</label>
+                                    <select class="form-control" 
+                                        id="Role"
+                                        name="Role"
+                                        placeholder="Select role Type">
+                                    <!-- <option value="blank"></option> -->
+                                    <option value="1" selected>Doctor</option >
+                                    <option value="2">Nurse</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="staff_EMail">Email</label>
+                                    <input 
+                                        type="Email" 
+                                        class="form-control" 
+                                        id="EMail"
+                                        name="EMail"
+                                        placeholder="Enter Staff EMail"
+                                    />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="Staff_Password">Password</label>
+                                    <input 
+                                        type="Password" 
+                                        class="form-control" 
+                                        id="Password"
+                                        name="Password"
+                                        placeholder="Enter Staff Password"
+                                    />
+                                </div>
+                                
+                                <br/>
+                                <button type="submit" class="btn btn-primary">Save Details</button>
+                            </form>
+                        </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div> -->
+            </div>
+
+        </div>
+    </div>
+                   
+</div>
+                <!-- /.container-fluid -->
+
+{% endblock %}
+
+
+
+
+            
