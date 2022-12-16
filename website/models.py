@@ -132,11 +132,12 @@ class InvoiceRecord(db.Model):
 
     Record_ID = Column(Integer, primary_key=True)
     Invoice_Number = Column(ForeignKey('Invoices.Invoice_Number'), index=True)
-    Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
+
     Description = Column(String(255))
     Amount = Column(DECIMAL(10, 2))
-
+    Create_Date = Column(TIMESTAMP)
     Invoice = relationship('Invoice')
+    Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
     Hospital_Staff = relationship('HospitalStaff')
 
 
@@ -148,6 +149,8 @@ class Payment(db.Model):
     Description = Column(VARCHAR(255))
     Payment_Date = Column(TIMESTAMP)
     Payment_Amount = Column(DECIMAL(10, 2))
+    Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
+    Hospital_Staff = relationship('HospitalStaff')
 
     Invoice = relationship('Invoice')
 

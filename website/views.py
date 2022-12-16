@@ -3,7 +3,9 @@ import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
 import json
+
 from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease
+
 from .auth import check_session
 from sqlalchemy import text
 from sqlalchemy.sql import func
@@ -30,6 +32,81 @@ def home():
         return render_template("admin.html", role="admin", admin=system_admin)
     else:
         return redirect(url_for('auth.login'))
+
+
+
+@views.route('/invoices', methods=['GET', 'POST'])
+def invoices():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method != 'POST':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        sql = text("select * from V_Invoices")
+        invoices = db.engine.execute(sql)
+        return render_template("invoices.html", role="staff", staff=staff, invoices = invoices)
+    else:
+        return redirect(url_for('views.appointments'))
+
+##invoice records -> json output
+
+@views.route('/invoice_records', methods = ['GET'])
+def invoice_records():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        inv_no = request.args.get("Invoice_Number")
+
+        invoice_records = InvoiceRecord.query.filter_by(Invoice_Number = inv_no).all()
+
+        all_records = [{
+                        'date' : str(datetime.strftime(record.Create_Date, '%d-%m-%Y %H:%M')),
+                        'record_id': str(record.Record_ID),
+                        'invoice_number': str(record.Invoice_Number),
+                        'staff_id': record.Hospital_Staff.Name + " " + record.Hospital_Staff.Surname + " (ID:"+str(record.Hospital_Staff.Staff_ID)+")",
+                        'description': str(record.Description),
+                        'amount': str(record.Amount)
+                          } for record in invoice_records]
+        return jsonify(all_records)
+    else:
+        return redirect(url_for('auth.login'))
+
+
+@views.route('/payments', methods = ['GET'])
+def invoice_payments():
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        inv_no = request.args.get("Invoice_Number")
+
+        payments = Payment.query.filter_by(Invoice_Number = inv_no).all()
+
+
+        all_records = [{
+                        'date' : str(datetime.strftime(record.Payment_Date, '%d-%m-%Y %H:%M')),
+                        'payment_id': str(record.Payment_ID),
+                        'description': str(record.Description),
+                        'amount': str(record.Payment_Amount),
+                         'staff': str(record.Hospital_Staff.Name) + " " + str(record.Hospital_Staff.Surname) + " ID: " + str(record.Hospital_Staff.Staff_ID)
+                          } for record in payments]
+        return jsonify(all_records)
+    else:
+        return redirect(url_for('auth.login'))
+
+@views.route('/add_invoice', methods = ['POST'])
+def add_invoice():
+    staff = session['Staff_ID']
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        patient_id = data["Patient_ID"]
+        due_date  = data["Due_Date"]
+        due_date = datetime.strptime(due_date, "%d/%m/%Y")
+
+        new_invoice = Invoice(Patient_ID = patient_id, Due_Date = due_date, Creation_Date = func.now())
+        db.session.add(new_invoice)
+        db.session.commit()
+
+        print(patient_id, due_date)
+        return render_template("add_payment.html", role="staff", staff=staff)
+    else:
+        return redirect(url_for('views.home'))
+
+
+
 
 ##staff route
 @views.route('/staff', methods=['GET', 'POST'])
@@ -107,20 +184,64 @@ def create_prescription():
 
     return redirect(url_for('views.home'))
 
-@views.route('/prescription', methods=['GET'])
-def prescription():
+
+#invoice record -> add
+@views.route('/add_record', methods=['GET', 'POST'])
+def add_record():
+    staff = session['Staff_ID']
+
     if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
         # ("staff or admin user visiting appointments view")
-        staff = session['Staff_ID']
-        prescriptionID = request.args.get("Prescription_ID")
-        prescription_ = Prescription.query.filter_by(Prescription_ID = prescriptionID).first()
-        content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
-        medicines = Medicine.query.all()
+       return render_template("add_record.html", role="staff", staff=staff)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        inv_number = data["Invoice_Number"]
+        inv = Invoice.query.filter_by(Invoice_Number = inv_number).first()
+        print(inv_number)
+        if inv:
+            data = json.loads(request.data)
 
-        if content and prescription:
-            return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
-                                   specifications=None, prescription_content = content, medicines = medicines)
+            description = data["Description"]
+            amount = data["Amount"]
+            inv_record_new = InvoiceRecord(Invoice_Number = inv_number,
+                                           Staff_ID = staff,
+                                           Description = description,
+                                           Amount = float(amount),
+                                           Create_Date = func.now()
+                                           )
+            db.session.add(inv_record_new)
+            db.session.commit()
+        return render_template("add_record.html", role="staff", staff=staff)
+    else:
+        return redirect(url_for('views.home'))
 
+##add payments
+
+@views.route('/add_payment', methods=['GET', 'POST'])
+def add_payment():
+    staff = session['Staff_ID']
+
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
+        # ("staff or admin user visiting appointments view")
+       return render_template("add_payment.html", role="staff", staff=staff)
+    elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
+        data = json.loads(request.data)
+        inv_number = data["Invoice_Number"]
+        inv = Invoice.query.filter_by(Invoice_Number = inv_number).first()
+        print(inv_number)
+        if inv:
+            data = json.loads(request.data)
+            description = data["Description"]
+            amount = data["Amount"]
+            new_payment = Payment(Invoice_Number = inv_number, Staff_ID = staff,
+                                  Description = description, Payment_Amount = float(amount),
+                                  Payment_Date = func.now()
+                                  )
+
+
+            db.session.add(new_payment)
+            db.session.commit()
+        return render_template("add_payment.html", role="staff", staff=staff)
     else:
         return redirect(url_for('views.home'))
 
@@ -302,71 +423,85 @@ def appointments():
 
 @views.route('/rooms', methods=['GET', 'POST'])
 def showrooms():
-    if request.method == 'POST':
-        if request.form.get('room_type') == "1":
-            rt = 1
-        else:
-            rt = 0
-        new_room = Room(Room = request.form.get('room_name'),
-                        Building = request.form.get('building'),
-                        Type = request.form.get('room_type'))
-        
-        db.session.add(new_room)
-        db.session.commit()
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        if request.method == 'POST':
+            if request.form.get('room_type') == "1":
+                rt = 1
+            else:
+                rt = 0
+            new_room = Room(Room = request.form.get('room_name'),
+                            Building = request.form.get('building'),
+                            Type = request.form.get('room_type'))
+
+            db.session.add(new_room)
+            db.session.commit()
+            rooms = db.session.query(Room).all()
+            return render_template('rooms.html',rooms=rooms, role="admin")
+
+
         rooms = db.session.query(Room).all()
         return render_template('rooms.html',rooms=rooms, role="admin")
-
-
-    rooms = db.session.query(Room).all()
-    return render_template('rooms.html',rooms=rooms, role="admin")
-
+    else:
+        return redirect(url_for('auth.login'))
 
 
 @views.route('/deleteroom/<int:id>', methods=['POST'])
 def deleteroom(id):
-    room_to_delete = db.session.query(Room).get(id)
-    db.session.delete(room_to_delete)
-    db.session.commit()
-    return redirect('/rooms')
-
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        room_to_delete = db.session.query(Room).get(id)
+        db.session.delete(room_to_delete)
+        db.session.commit()
+        return redirect('/rooms')
+    else:
+        return redirect(url_for('auth.login'))
 
 @views.route('/roombooking', methods=['GET', 'POST'])
 def bookrooms():
-    if request.method == 'POST':
-        query_for_patient = text("SELECT Patient_ID FROM Patients WHERE Name='"+request.form.get('patientname')+"' and E_Mail='"+request.form.get('patientemail')+"'")
-        patient_id = db.session.execute(query_for_patient).fetchone()
-        if patient_id:
-            new_admission = RoomBooking(
-                Patient_ID = patient_id[0],
-                Room_ID = request.form.get('room'),
-                Start_Date = request.form.get('arrive'),
-                # End_Date = request.form.get('depart'),
-                Status = 1
-                )
-            
-            db.session.add(new_admission)
-            db.session.commit()
-            flash('Admission Successful')
-            return redirect('/roombooking')
-        else:
-            flash('Patient Record not found', category='error')
-    statement = text("SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
-    availablerooms = db.session.execute(statement)
-    return render_template("roombooking.html",availablerooms=availablerooms, role="staff")
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        if request.method == 'POST':
+            query_for_patient = text("SELECT Patient_ID FROM Patients WHERE Name='"+request.form.get('patientname')+"' and E_Mail='"+request.form.get('patientemail')+"'")
+            patient_id = db.session.execute(query_for_patient).fetchone()
+            if patient_id:
+                new_admission = RoomBooking(
+                    Patient_ID = patient_id[0],
+                    Room_ID = request.form.get('room'),
+                    Start_Date = request.form.get('arrive'),
+                    # End_Date = request.form.get('depart'),
+                    Status = 1
+                    )
+
+                db.session.add(new_admission)
+                db.session.commit()
+                flash('Admission Successful')
+                return redirect('/roombooking')
+            else:
+                flash('Patient Record not found', category='error')
+        statement = text("SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
+        availablerooms = db.session.execute(statement)
+        return render_template("roombooking.html",availablerooms=availablerooms, role="staff")
+    else:
+        return redirect('/login')
 
 
 @views.route('/roomadmissions', methods=['GET', 'POST'])
 def showadmissions():
-    stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY Room_Bookings.Start_Date desc")
-    admissions = db.session.execute(stmt)
-    return render_template('roomadmissions.html',admissions=admissions, role="staff")
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY Room_Bookings.Start_Date desc")
+        admissions = db.session.execute(stmt)
+        return render_template('roomadmissions.html',admissions=admissions, role="staff")
+    else:
+        return redirect('/login')
 
 @views.route('/canceladmission/<int:id>', methods=['POST'])
 def canceladmission(id):
-    stmt = text("UPDATE Room_Bookings SET Status=0 WHERE Booking_ID='"+str(id)+"'")
-    db.session.execute(stmt)
-    db.session.commit()
-    return redirect('/roomadmissions')
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        stmt = text("UPDATE Room_Bookings SET Status=0 WHERE Booking_ID='"+str(id)+"'")
+        db.session.execute(stmt)
+        db.session.commit()
+        return redirect('/roomadmissions')
+    else:
+        return redirect('/login')
+
 
 
 #patients-page
@@ -515,6 +650,26 @@ def list_patients():
 #list_prescriptions
 
 
+@views.route('/prescription', methods=['GET'])
+def prescription():
+    #add prescription
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'GET':
+        # ("staff or admin user visiting appointments view")
+        staff = session['Staff_ID']
+        prescriptionID = request.args.get("Prescription_ID")
+        prescription_ = Prescription.query.filter_by(Prescription_ID = prescriptionID).first()
+        content = PrescriptionContent.query.filter_by(Prescription_ID=prescriptionID)
+        medicines = Medicine.query.all()
+
+        if content and prescription:
+            return render_template("prescription.html", role="staff", staff=staff, patient=None, appointments=None,
+                                   specifications=None, prescription_content = content, medicines = medicines)
+
+    else:
+        return redirect(url_for('views.home'))
+
+
+
 # in order to return the content of the prescription from other table
 def prescription_detail(prescription_id):
     contents = PrescriptionContent.query.filter_by(Prescription_ID = prescription_id).all()
@@ -642,9 +797,12 @@ def list_prescriptions():
 
 @views.route('/dischargeadmission/<int:id>', methods=['POST'])
 def dischargeadmission(id):
-    stmt = text("UPDATE Room_Bookings SET Status=2,End_Date= (SELECT NOW()) WHERE Booking_ID='"+str(id)+"'")
-    db.session.execute(stmt)
-    db.session.commit()
-    return redirect('/roomadmissions')
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        stmt = text("UPDATE Room_Bookings SET Status=2,End_Date= (SELECT NOW()) WHERE Booking_ID='"+str(id)+"'")
+        db.session.execute(stmt)
+        db.session.commit()
+        return redirect('/roomadmissions')
+    else:
+        return redirect('/login')
     
     
