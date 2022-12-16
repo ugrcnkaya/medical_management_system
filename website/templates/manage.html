@@ -106,10 +106,11 @@
                                         name="Specification_ID"
                                         placeholder="Select Specialization Type">
                                     <!-- <option value="blank"></option> -->
-                                    <option value="1" selected>Praktikent</option >
-                                    <option value="2">Cardiology</option>
-                                    <option value="3">Allergy</option>
-                                    <option value="4">Nurse</option>
+                                        {% for specification in specifications %}
+                                    <option value="{{ specification.Specification_ID }}" selected>{{ specification.Title }}</option >
+
+
+                                        {% endfor %}
                                     </select>
                                 </div>
 
@@ -120,8 +121,9 @@
                                         name="Role"
                                         placeholder="Select role Type">
                                     <!-- <option value="blank"></option> -->
-                                    <option value="1" selected>Doctor</option >
-                                    <option value="2">Nurse</option>
+                                        {% for role in roles %}
+                                    <option value="{{ role.Role }}" selected>{{ role.Description }}</option >
+                                    {% endfor %}
                                     </select>
                                 </div>
 

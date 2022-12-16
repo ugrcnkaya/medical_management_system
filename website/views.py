@@ -150,15 +150,17 @@ def showstaff():
                         Password = generate_password_hash(request.form.get('Password'), method='sha256')
                           )
 
+
         db.session.add(new_staff)
         db.session.commit()
 
 
         Hospital_Staff = db.session.query(HospitalStaff).all()
         return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin")
-
+    all_specifications = Specification.query.all()
+    roles = Role.query.all()
     Hospital_Staff = db.session.query(HospitalStaff).all()
-    return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin")
+    return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin", specifications = all_specifications, roles= roles)
 
 @views.route('/deletestaff/<int:id>', methods=['POST'])
 def deletestaff(id):
