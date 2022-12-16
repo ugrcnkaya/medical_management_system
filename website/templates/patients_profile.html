@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+ <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css"
+    />
+    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+
+                    <!--New Appointment -->
+
+
+
+           <h1 class="h3 mb-4 text-gray-800">Profile</h1>
+
+
+        <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Prescriptions
+</h6>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="prescriptionsTable" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+        </div>
+        <div class="card shadow mb-4" id="bottomPanel">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Diagnoses</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="diagnoses" width="100%" cellspacing="0">
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+        </div>
+
+     <div class="row">
+        <div class="col-sm">
+               <!-- List Availability Schedule -->
+
+                    <div class="card shadow mb-2">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Invoice List
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addInvoice">
+                                    +
+                            </button>
+
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice Number</th>
+                                            <th>Creation Date</th>
+                                            <th>Due Date</th>
+                                            <th>Patient</th>
+                                            <th>Total Debt</th>
+                                            <th>Paid Amount</th>
+                                            <th>Remaining</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+{% for invoice in invoices %}
+                                        <tr>
+                                        <td>{{invoice.Invoice_Number}}</td>
+                                        <td>{{invoice.Creation_Date.strftime('%d-%m-%Y %H:%M')}}</td>
+                                        <td>{{invoice.Due_Date.strftime('%d-%m-%Y %H:%M')}}</td>
+                                        <td>{{invoice.Patient}}</td>
+                                        <td>{{invoice.Total_Amount}} €</td>
+                                        <td>{{invoice.Paid_Amount}} €</td>
+                                        <td>{{invoice.Remaining}} €</td>
+                                        <td>
+                                            <a onclick="showDetails({{invoice.Invoice_Number}})" class="btn btn-info btn-icon-split">
+                                                    <span class="icon text-white-50">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </span>
+                                                    <span class="text">Show Details</span>
+                                            </a>
+
+
+                                        </td>
+                                        </tr>
+{% endfor %}
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+    </div>
+
+
+
+
+        <div class="row">
+        <div class="col-sm">
+               <!-- List Availability Schedule -->
+
+                    <div class="card shadow mb-2" id="invDetailsTab">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Invoice Details
+
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+
+                                <a onclick="hideDetails()" class="btn btn-success btn-icon-split">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span class="text">Hide</span>
+                                    </a>
+
+                               <br>
+                                <br>
+                                Records: <br> <br>
+                                <table class="table table-bordered" id="dataTable2" width="100%" cellspacing="0">
+
+
+                                    <tbody>
+
+
+
+
+
+                                    </tbody>
+                                </table>
+                                <hr>
+                                Payments: <br> <br>
+                                 <table class="table table-bordered" id="dataTable3" width="100%" cellspacing="0">
+
+
+                                    <tbody>
+
+
+
+
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+       <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='populate.js') }}"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+    function status(x, id){
+        if(x == 1){
+
+            return "<button class='btn btn-success'><span aria-hidden='true' onclick='completeAppointment("+id+")'>Mark as Completed</span></button>"
+        }
+        else if(x == 0){
+            return "<button class='btn btn-danger' disabled><span aria-hidden='true'>Cancelled</span></button>"
+        }
+        else if(x == 2){
+            return "<button class='btn btn-secondary' disabled><span aria-hidden='true'>Already Visited</span></button>"
+        }
+
+    }
+
+
+
+
+    function updateDiagnoses(){
+        var patient_ID = {{ patient }};
+        if (patient_ID != "Choose..."){
+            $("#diagnoses").empty();
+            var value = patient_ID;
+
+             $.ajax({
+            type: 'GET',
+            url: "/list_diagnoses?Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#diagnoses").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff</td>
+                                            <td>Disease</td>
+                                            <td>Note</td>
+
+
+
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date+"</td>" +
+                              "<td>"+b.staff+"</td>" +
+
+                             "<td>"+b.disease+"</td>" +
+                             "<td>"+b.note+"</td>" +
+
+                             "</tr>";
+
+
+                   })
+                       $("#diagnoses").empty();
+                     $("#diagnoses").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
+
+        }
+
+    }
+    function updatePrescriptions(){
+        var patient_ID = {{ patient }};
+
+        if (patient_ID != "Choose...") {
+             $("#prescriptionsTable").empty();
+
+
+            var value = patient_ID;
+             $.ajax({
+            type: 'GET',
+            url: "/list_prescriptions?Type=All&Patient_ID="+value,
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 //$("#doctor").empty();
+                   if (response.length > 0){
+
+                       $("#prescriptionsTable").empty();
+                       console.log(response)
+                       output  = `<thead> <tr>
+                                            <td>Date</td>
+                                            <td>Staff Name</td>
+                                            <td>Content</td>
+
+
+                                        </tr>   </thead>`;
+                      $.each(response, function(a,b){
+                         output += "<tr>" +
+                             "<td>"+b.date_created+"</td>" +
+                              "<td>"+b.staff_name+"</td>" +
+                             "<td>"+b.content+"</td>" +
+
+
+                             "</tr>";
+
+
+                   })
+                       $("#prescriptionsTable").empty();
+                     $("#prescriptionsTable").append(output);
+
+
+
+
+                   }
+
+            }
+        });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+    $( document ).ready(function() {
+        updateDiagnoses();
+        updatePrescriptions();
+
+
+});
+
+
+    </script>
+    <script>
+
+
+
+function addInvoice() {
+
+    var patient = $('#patient').val();
+    var date = $('#date').val();
+
+    if(patient == 0){
+        location.reload();
+        return 0;
+    }
+  fetch("/add_invoice", {
+    method: "POST",
+    body: JSON.stringify({ Patient_ID: patient, Due_Date: date}),
+  }).then((_res) => {
+    location.reload()
+  });
+}
+
+
+
+    $(document).ready(function(){
+      var date_input=$('input[name="date"]'); //our date input has the name "date"
+      var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
+      var options={
+        format: 'dd/mm/yyyy',
+        container: container,
+        todayHighlight: true, todayBtn: "linked",
+         clearBtn: true,
+         autoclose: true,
+          todayHighlight: true,
+          startDate: '+1d',
+        autoclose: true,
+
+      };
+      date_input.datepicker(options);
+    })
+</script>
+     <script>
+     $(document).ready(function(){
+         $("#invDetailsTab").hide();
+
+             $.ajax({
+            type: 'GET',
+            url: "/list_patients",
+            //data: { Specification: Specification },
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                 $("#patient").empty();
+
+                   var output = "<option  value=\"0\" disabled selected>Choose...</option>";
+                   $.each(response, function(a,b){
+
+                         output += "<option value="+(b.id).toUpperCase()+">"+(b.desc).toUpperCase()+"</option>";
+                   })
+                $("#patient").append(output);
+                       $('#patient').selectize({
+                                  sortField: 'text'
+                            });
+            }
+        });
+     });
+
+
+
+ </script>
+    <script>
+
+ function showDetails(Invoice_Number){
+        if (Invoice_Number != 0) {
+            $("#dataTable2").empty();
+            var value = Invoice_Number;
+
+            $.ajax({
+                type: 'GET',
+                url: "/invoice_records?Invoice_Number=" + value,
+                //data: { Specification: Specification },
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (response) {
+                    //$("#doctor").empty();
+                    if (response.length > 0) {
+
+                        $("#dataTable2").empty();
+                        console.log(response)
+                        output = `<thead>
+                                        <tr>
+                                            <th>Record Date</th>
+                                            <th>Staff</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>`;
+                        $.each(response, function (a, b) {
+                            output += "<tr>" +
+                                "<td>" + b.date + "</td>" +
+                                "<td>" + b.staff_id + "</td>" +
+                                "<td>" + b.description + "</td>" +
+                                "<td>" + b.amount + "</td>" +
+                                "</tr>";
+
+
+                        })
+                        $("#dataTable2").empty();
+                        $("#dataTable2").append(output);
+                        $("#invDetailsTab").show();
+                        showPayments(value);
+
+
+                    }
+
+                }
+            });
+        }
+ }
+
+ function showPayments(Invoice_Number){
+        if (Invoice_Number != 0) {
+            $("#dataTable3").empty();
+            var value = Invoice_Number;
+
+            $.ajax({
+                type: 'GET',
+                url: "/payments?Invoice_Number=" + value,
+                //data: { Specification: Specification },
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (response) {
+                    //$("#doctor").empty();
+                    if (response.length > 0) {
+
+                        $("#dataTable3").empty();
+                        console.log(response)
+                        output = `<thead>
+                                        <tr>
+                                            <th>Payment Date</th>
+                                            <th>Staff</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+
+
+                                        </tr>
+                                    </thead>`;
+                        $.each(response, function (a, b) {
+                            output += "<tr>" +
+
+                                "<td>" + b.date + "</td>" +
+                                "<td>" + b.staff + "</td>" +
+                                "<td>" + b.description + "</td>" +
+                                "<td>" + b.amount + "</td>" +
+
+
+                                "</tr>";
+
+
+                        })
+                        $("#dataTable3").empty();
+                        $("#dataTable3").append(output);
+                        $("#invDetailsTab").show();
+
+
+                    }
+
+                }
+            });
+        }
+ }
+
+
+
+
+
+
+function hideDetails(){
+    $("#invDetailsTab").hide();
+}
+
+
+
+    </script>
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
+
+{% endblock %}
