@@ -1,4 +1,4 @@
-##routes for website
+# ##routes for website
 import sqlalchemy
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from . import db
@@ -717,5 +717,40 @@ def dischargeadmission(id):
     db.session.execute(stmt)
     db.session.commit()
     return redirect('/roomadmissions')
+
+
     
-    
+# Update Database Record
+@views.route('/editpatientdetail/<id>', methods=['GET', 'POST'])
+def editpatientdetail(id):
+    print("id is : ", id)
+    if 'username' not in session:
+        print("inside sesssss")
+        print(datetime.now())
+        editpat = Patient.query.filter_by(Patient_ID=id)
+
+        if request.method == 'POST':
+            print("inside editpat post mtd")
+            name = request.form['Name']
+            surname = request.form['Surname']
+            birthdate = request.form['Birthdate']
+            address = request.form['naddress']
+            state = request.form['nstate']
+            city = request.form['ncity']
+            status = request.form['status']
+            row_update = Patient.query.filter_by(Patient_ID=id).update(
+                dict(Name=name, surname=Surname, birthdate=Birthdate, address=address, state=state, city=city, status=status,
+                     ))
+            db.session.commit()
+            print("Roww update", row_update)
+
+            if row_update == None:
+                flash('Something Went Wrong')
+                return redirect(url_for('update_patient'))
+            else:
+                flash('Patient update initiated successfully')
+                return redirect(url_for('homepage'))
+
+        else:
+            editpat = Patient.query.filter_by(Patient_ID=id)
+        return render_template('editpatientdetail.html', editpat=editpat)
