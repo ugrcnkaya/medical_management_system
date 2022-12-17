@@ -6,6 +6,9 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
 
+    <!-- Trigger the modal with a button -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" style="float: right;">Add A Room</button>
+
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800">Rooms</h1>
     
@@ -23,8 +26,6 @@
                             <th>Room Number</th>
                             <th>Building</th>
                             <th>Room Type</th>
-                            <!-- <th>Bedding Type</th>
-                            <th>Price Per Day</th> -->
                             <th>Actions</th>
 
                         </tr>
@@ -37,13 +38,25 @@
                             <td>{{ room.Room }}</td>
                             <td>{{ room.Building }}</td>
                             <td>{{ room.Type }}</td>
-                            <td>
-                                <form action="{{ url_for('views.deleteroom', id=room.Room_ID) }}" method="POST">
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                    
-                                </form>
-                                
-                            </td>
+                            {% if room.Type=="Admission Room" %}
+                                {% if room.Status %}
+                                <td>
+                                    <form action="{{ url_for('views.disableroom', id=room.Room_ID) }}" method="POST">
+                                        <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+                                        
+                                    </form>
+                                </td>
+                                {% else %}
+                                <td>
+                                    <form action="{{ url_for('views.enableroom', id=room.Room_ID) }}" method="POST">
+                                        <button type="submit" class="btn btn-success btn-sm">Enable</button>
+                                        
+                                    </form>
+                                </td>
+                                {% endif %}
+                            {% else %}
+                                <td></td>
+                            {% endif %}
                         </tr>
 
                         {%endfor%}
@@ -59,8 +72,7 @@
 
     
 
-<!-- Trigger the modal with a button -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add A Room</button>
+
 
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
@@ -111,7 +123,6 @@
                     id="room_type" 
                     name="room_type" 
                     placeholder="Select Room Type">
-                    <option value="blank"></option>
                     <option value="Doctors Room" selected>Doctors Room</option>
                     <option value="Surgery Room">Surgery Room</option>
                     <option value="Admission Room">Admission Room</option>
