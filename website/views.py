@@ -101,6 +101,7 @@ def invoice_payments():
                         'payment_id': str(record.Payment_ID),
                         'description': str(record.Description),
                         'amount': str(record.Payment_Amount),
+                        'type': str(record.Type),
                          'staff': str(record.Hospital_Staff.Name) + " " + str(record.Hospital_Staff.Surname) + " ID: " + str(record.Hospital_Staff.Staff_ID)
                           } for record in payments]
         return jsonify(all_records)
@@ -134,9 +135,10 @@ def add_invoice():
         data = json.loads(request.data)
         patient_id = data["Patient_ID"]
         due_date  = data["Due_Date"]
+
         due_date = datetime.strptime(due_date, "%d/%m/%Y")
 
-        new_invoice = Invoice(Patient_ID = patient_id, Due_Date = due_date, Creation_Date = func.now())
+        new_invoice = Invoice(Patient_ID = patient_id, Due_Date = due_date ,Creation_Date = func.now())
         db.session.add(new_invoice)
         db.session.commit()
 
@@ -269,6 +271,7 @@ def add_payment():
     elif check_session()["Logged_In"] != False and check_session()["Role"] != "Patient" and request.method == 'POST':
         data = json.loads(request.data)
         inv_number = data["Invoice_Number"]
+        type = data["Type"]
         inv = Invoice.query.filter_by(Invoice_Number = inv_number).first()
         print(inv_number)
         if inv:
@@ -277,7 +280,8 @@ def add_payment():
             amount = data["Amount"]
             new_payment = Payment(Invoice_Number = inv_number, Staff_ID = staff,
                                   Description = description, Payment_Amount = float(amount),
-                                  Payment_Date = func.now()
+                                  Payment_Date = func.now(),
+                                  Type = type
                                   )
 
 
