@@ -151,6 +151,7 @@ class Payment(db.Model):
     Payment_Amount = Column(DECIMAL(10, 2))
     Staff_ID = Column(ForeignKey('Hospital_Staff.Staff_ID'), index=True)
     Hospital_Staff = relationship('HospitalStaff')
+    Type = Column(String)
 
     Invoice = relationship('Invoice')
 
