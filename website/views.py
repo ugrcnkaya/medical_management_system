@@ -915,3 +915,36 @@ def profile():
         return render_template("patients_profile.html", role="patient", patient= patient_id, appointments = appointments, invoices = invoices )
     else:
         return redirect(url_for('views.patients'))
+
+# Update Database Record
+@views.route('/editpatientdetail/<id>', methods=['GET', 'POST'])
+def editpatientdetail(id):
+    print("id is : ", id)
+    if 'username' not in session:
+        editpat = Patient.query.filter_by(Patient_ID=id)
+
+        if request.method == 'POST':
+            print("inside editpat post mtd")
+            name = request.form['name']
+            surname = request.form['surname']
+            birthdate = request.form['Birthdate']
+            phonenumber = request.form['phonenumber']
+            address = request.form['address']
+            # state = request.form['state']
+            city = request.form['city']
+            # status = request.form['status']
+            row_update = Patient.query.filter_by(Patient_ID=id).update(
+                dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
+            db.session.commit()
+            print("Roww update", row_update)
+
+            if row_update == None:
+                flash('Something Went Wrong')
+                return redirect(url_for('update_patient'))
+            else:
+                flash('Patient update initiated successfully')
+                return redirect(url_for('views.home'))
+
+        else:
+            editpat = Patient.query.filter_by(Patient_ID=id)
+        return render_template('editpatientdetail.html', editpat=editpat)
