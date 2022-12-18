@@ -344,7 +344,7 @@
                              "<td>"+b.content+"</td>" +
                              "<td>" +
                              "<a  onclick='updatePrescriptions()' class='btn btn-info btn-circle btn-sm'> <i class='fas fa-info-circle'></i></a>&nbsp;" +
-                             "<a data-fancybox data-type='iframe' href='http://127.0.0.1:5000/prescription?PrescriptionID="+b.id+"'  target='_blank'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
+                             "<a data-fancybox data-type='iframe' href='{{ url_for('views.home') }}prescription?PrescriptionID="+b.id+"'  target='_blank'  class='btn btn-primary btn-circle btn-sm'> <i class='fa fa-indent'>" +
                              "</i></a>&nbsp" +
                              "<a  onclick='cancelPrescription("+b.id+")' class='btn btn-danger btn-circle btn-sm'> <i class='fas fa-trash'></i></a>&nbsp" +
                              "</td>"+
