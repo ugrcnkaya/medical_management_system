@@ -35,6 +35,11 @@ class Patient(db.Model):
     Password = Column(String(255))
     E_Mail = Column(String(255), unique = True)
     Status = Column(INTEGER)
+    Document_Number = Column(String)
+    Country = Column(String)
+    City = Column(String)
+    Address = Column(String)
+    Phone_Number = Column(String)
 
 
 class Role(db.Model):
