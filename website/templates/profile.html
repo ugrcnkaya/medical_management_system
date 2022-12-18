@@ -30,36 +30,56 @@
 
             <tbody>
               <tr>
+                <td>First name:</td>
+                <td>{{ patient.Name }}</td>
+              </tr>
+              <tr>
+                <td>Last name:</td>
+                <td>{{ patient.Surname }}</td>
+              </tr>
+              <tr>
                 <td>E-Mail:</td>
                 <td>{{ patient.E_Mail }}</td>
               </tr>
               <tr>
                 <td>Phone Number:</td>
-                <td>{{ patient.Phone }}</td>
+                <td>{{ patient.Phone_Number }}</td>
               </tr>
-              <tr>
-                <td>ID Number:</td>
-                <td>1283128</td>
-              </tr>
-
               <tr>
                 <td>Address:</td>
-                <td>1283128</td>
+                <td>{{ patient.Address }}</td>
               </tr>
               <tr>
                 <td>City:</td>
-                <td>1283128</td>
+                <td>{{ patient.City }}</td>
               </tr>
-              <tr>
-                <td>Country:</td>
-                <td>1283128</td>
+                            <tr>
+                <td>state:</td>
+                <td>{{ patient.State }}</td>
               </tr>
-              <tr>
-                <td>ZIP Code:</td>
-                <td>1283128</td>
-              </tr>
+<!--              <tr>-->
+<!--                <td>ID Number:</td>-->
+<!--                <td>1283128</td>-->
+<!--              </tr>-->
 
-              <a class="small" href="/editpatientdetail/12">Edit</a>
+<!--              <tr>-->
+<!--                <td>Address:</td>-->
+<!--                <td>1283128</td>-->
+<!--              </tr>-->
+<!--              <tr>-->
+<!--                <td>City:</td>-->
+<!--                <td>1283128</td>-->
+<!--              </tr>-->
+<!--              <tr>-->
+<!--                <td>Country:</td>-->
+<!--                <td>1283128</td>-->
+<!--              </tr>-->
+<!--              <tr>-->
+<!--                <td>ZIP Code:</td>-->
+<!--                <td>1283128</td>-->
+<!--              </tr>-->
+
+              <a class="button" href="/editpatientdetail/{{patient.Patient_ID}}">Edit</a>
             </tbody>
           </table>
         </div>

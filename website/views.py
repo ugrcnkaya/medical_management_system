@@ -725,22 +725,20 @@ def dischargeadmission(id):
 def editpatientdetail(id):
     print("id is : ", id)
     if 'username' not in session:
-        print("inside sesssss")
-        print(datetime.now())
         editpat = Patient.query.filter_by(Patient_ID=id)
 
         if request.method == 'POST':
             print("inside editpat post mtd")
-            name = request.form['Name']
-            surname = request.form['Surname']
+            name = request.form['name']
+            surname = request.form['surname']
             birthdate = request.form['Birthdate']
-            address = request.form['naddress']
-            state = request.form['nstate']
-            city = request.form['ncity']
-            status = request.form['status']
+            phonenumber = request.form['phonenumber']
+            address = request.form['address']
+            # state = request.form['state']
+            city = request.form['city']
+            # status = request.form['status']
             row_update = Patient.query.filter_by(Patient_ID=id).update(
-                dict(Name=name, surname=Surname, birthdate=Birthdate, address=address, state=state, city=city, status=status,
-                     ))
+                dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
             db.session.commit()
             print("Roww update", row_update)
 
@@ -749,7 +747,7 @@ def editpatientdetail(id):
                 return redirect(url_for('update_patient'))
             else:
                 flash('Patient update initiated successfully')
-                return redirect(url_for('homepage'))
+                return redirect(url_for('views.home'))
 
         else:
             editpat = Patient.query.filter_by(Patient_ID=id)
