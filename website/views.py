@@ -194,7 +194,6 @@ def showstaff():
         db.session.add(new_staff)
         db.session.commit()
 
-
         Hospital_Staff = db.session.query(HospitalStaff).all()
         return render_template('manage.html', Hospital_Staff=Hospital_Staff, role="admin")
     all_specifications = Specification.query.all()
