@@ -731,9 +731,10 @@ def editpatientdetail(id):
             birthdate = request.form['Birthdate']
             phonenumber = request.form['phonenumber']
             address = request.form['address']
+            email=request.form['email']
             city = request.form['city']
             row_update = Patient.query.filter_by(Patient_ID=id).update(
-                dict(Name=name, Surname=surname, Birthdate=birthdate, Phone_Number=phonenumber, Address=address, City=city))
+                dict(Name=name, Surname=surname, Birthdate=birthdate, E_Mail=email, Phone_Number=phonenumber, Address=address, City=city))
             db.session.commit()
 
             if row_update == None:
