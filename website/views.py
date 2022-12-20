@@ -925,36 +925,32 @@ def profile():
 # Update Database Record
 @views.route('/editpatientdetail/<id>', methods=['GET', 'POST'])
 def editpatientdetail(id):
-    print("id is : ", id)
     if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
-        if 'username' not in session:
-            editpat = Patient.query.filter_by(Patient_ID=id)
 
-            if request.method == 'POST':
-                print("inside editpat post mtd")
-                name = request.form['name']
-                surname = request.form['surname']
-                birthdate = request.form['Birthdate']
-                phonenumber = request.form['phonenumber']
-                address = request.form['address']
-                # state = request.form['state']
-                city = request.form['city']
-                # status = request.form['status']
-                row_update = Patient.query.filter_by(Patient_ID=id).update(
-                    dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
-                db.session.commit()
-                print("Roww update", row_update)
+        if request.method == 'POST':
+            name = request.form['name']
+            surname = request.form['surname']
+            birthdate = request.form['Birthdate']
+            phonenumber = request.form['phonenumber']
+            address = request.form['address']
+            email=request.form['email']
+            city = request.form['city']
+            row_update = Patient.query.filter_by(Patient_ID=id).update(
+                dict(Name=name, Surname=surname, Birthdate=birthdate, E_Mail=email, Phone_Number=phonenumber, Address=address, City=city))
+            db.session.commit()
 
-                if row_update == None:
-                    flash('Something Went Wrong')
-                    return redirect(url_for('update_patient'))
-                else:
-                    flash('Patient update initiated successfully')
-                    return redirect(url_for('views.home'))
-
+            if row_update == None:
+                flash('Something Went Wrong')
+                return redirect(url_for('update_patient'))
             else:
-                editpat = Patient.query.filter_by(Patient_ID=id)
-            return render_template('editpatientdetail.html', editpat=editpat)
+                flash('Patient update initiated successfully')
+                return redirect(url_for('views.home'))
+
+        else:
+              editpat = Patient.query.filter_by(Patient_ID=id)
+        return render_template('editpatientdetail.html', editpat=editpat)
+
+    return redirect(url_for('views.home'))
 
 
 @views.route('/pdf_export', methods=['GET'])
