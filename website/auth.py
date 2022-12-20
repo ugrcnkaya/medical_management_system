@@ -110,14 +110,14 @@ def sign_up():
             password1 = request.form.get('password1')
             password2 = request.form.get('password2')
             patient = Patient.query.filter_by(E_Mail=email).first()
-            result = dateDiff(date.today(), datetime.strptime(request.form.get('birthdate'), '%Y-%m-%d').date(),"years")
+            res = dateDiff(date.today(), datetime.strptime(request.form.get('birthdate'), '%Y-%m-%d').date(),"years")
             if patient:
                 flash('Email already exists.', category='error')
             elif not EMAIL_REGEX.match(email):
                 flash('Invalid Email address!', category='error')
             elif not PHONE_REGEX.match(phone):
                 flash('Phone should be 11 digits', category='error')
-            elif result < 18:
+            elif res < 18:
                 flash('You need to be at least 18 years old to register', category='error')
             elif len(firstName) < 2:
                 flash('First name must be greater than 1 characters.', category='error')
