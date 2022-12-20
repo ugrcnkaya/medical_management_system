@@ -468,21 +468,22 @@ def appointments():
 
 @views.route('/rooms', methods=['GET', 'POST'])
 def showrooms():
-    if request.method == 'POST':
-        if request.form.get('room_name') and request.form.get('building'):
-            new_room = Room(Room=request.form.get('room_name'),
-                            Building=request.form.get('building'),
-                            Type=request.form.get('room_type'),
-                            Status=1)
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Admin":
+        if request.method == 'POST':
+            if request.form.get('room_name') and request.form.get('building'):
+                new_room = Room(Room=request.form.get('room_name'),
+                                Building=request.form.get('building'),
+                                Type=request.form.get('room_type'),
+                                Status=1)
 
-            db.session.add(new_room)
-            db.session.commit()
-            return redirect('/rooms')
-        else:
-            flash('Please Enter All Details To Add New Room', category='error')
+                db.session.add(new_room)
+                db.session.commit()
+                return redirect('/rooms')
+            else:
+                flash('Please Enter All Details To Add New Room', category='error')
 
-    rooms = db.session.query(Room).order_by(Room.Status.desc()).all()
-    return render_template('rooms.html', rooms=rooms, role="admin")
+        rooms = db.session.query(Room).order_by(Room.Status.desc()).all()
+        return render_template('rooms.html', rooms=rooms, role="admin")
 
 
 @views.route('/disableroom/<int:id>', methods=['POST'])
@@ -521,55 +522,58 @@ def enableroom(id):
 
 @views.route('/roombooking', methods=['GET', 'POST'])
 def bookrooms():
-    if request.method == 'POST':
-        query_for_patient = text("SELECT Patient_ID FROM Patients WHERE Name='" + request.form.get(
-            'patientname') + "' and E_Mail='" + request.form.get('patientemail') + "'")
-        patient_id = db.session.execute(query_for_patient).fetchone()
-        if patient_id:
-            query = text("select * from Room_Bookings WHERE Patient_ID ='" + str(patient_id[0]) + "' AND Status =1")
-            record = db.session.execute(query).fetchone()
-            if record:
-                flash('Patient Already Has Active Admission Record', category='error')
-            else:
-                if request.form.get('arrive'):
-                    dateob = datetime.strptime(request.form.get('arrive'), '%Y-%m-%d')
-                    if dateob > (datetime.now() - timedelta(days=1)):
-                        new_admission = RoomBooking(
-                            Patient_ID=patient_id[0],
-                            Room_ID=request.form.get('room'),
-                            Start_Date=request.form.get('arrive'),
-                            # End_Date = request.form.get('depart'),
-                            Status=1
-                        )
-
-                        db.session.add(new_admission)
-                        db.session.commit()
-                        flash('Admission Successful')
-                        return redirect('/roombooking')
-                    else:
-                        flash('Admission Start Cannot Be A Past Date', category='error')
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        if request.method == 'POST':
+            query_for_patient = text("SELECT Patient_ID FROM Patients WHERE Name='" + request.form.get(
+                'patientname') + "' and E_Mail='" + request.form.get('patientemail') + "'")
+            patient_id = db.session.execute(query_for_patient).fetchone()
+            if patient_id:
+                query = text("select * from Room_Bookings WHERE Patient_ID ='" + str(patient_id[0]) + "' AND Status =1")
+                record = db.session.execute(query).fetchone()
+                if record:
+                    flash('Patient Already Has Active Admission Record', category='error')
                 else:
-                    flash('Please Enter Admission Start Date', category='error')
-        else:
-            flash('Patient Record not found', category='error')
-    statement = text(
-        "SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Status=1 and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
-    availablerooms = db.session.execute(statement)
-    return render_template("roombooking.html", availablerooms=availablerooms, role="staff")
+                    if request.form.get('arrive'):
+                        dateob = datetime.strptime(request.form.get('arrive'), '%Y-%m-%d')
+                        if dateob > (datetime.now() - timedelta(days=1)):
+                            new_admission = RoomBooking(
+                                Patient_ID=patient_id[0],
+                                Room_ID=request.form.get('room'),
+                                Start_Date=request.form.get('arrive'),
+                                # End_Date = request.form.get('depart'),
+                                Status=1
+                            )
+
+                            db.session.add(new_admission)
+                            db.session.commit()
+                            flash('Admission Successful')
+                            return redirect('/roombooking')
+                        else:
+                            flash('Admission Start Cannot Be A Past Date', category='error')
+                    else:
+                        flash('Please Enter Admission Start Date', category='error')
+            else:
+                flash('Patient Record not found', category='error')
+        statement = text(
+            "SELECT Room_ID, Room from Rooms where Type = \'Admission Room\' and Status=1 and Room_ID NOT IN (SELECT Room_ID from Room_Bookings WHERE status = 1)")
+        availablerooms = db.session.execute(statement)
+        return render_template("roombooking.html", availablerooms=availablerooms, role="staff")
 
 
 @views.route('/roomadmissions', methods=['GET', 'POST'])
 def showadmissions():
-    stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY field(Room_Bookings.Status,1,2,0,null)")
-    admissions = db.session.execute(stmt)
-    return render_template('roomadmissions.html',admissions=admissions, role="staff")
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        stmt = text("SELECT Room_Bookings.Booking_ID,Room_Bookings.Patient_ID,Room_Bookings.Room_ID,Room_Bookings.Start_Date,Room_Bookings.End_Date,Room_Bookings.Status,Rooms.Room,Patients.Name FROM Room_Bookings,Rooms,Patients WHERE Room_Bookings.Room_ID = Rooms.Room_ID and Room_Bookings.Patient_ID = Patients.Patient_ID ORDER BY field(Room_Bookings.Status,1,2,0,null)")
+        admissions = db.session.execute(stmt)
+        return render_template('roomadmissions.html',admissions=admissions, role="staff")
 
 @views.route('/canceladmission/<int:id>', methods=['POST'])
 def canceladmission(id):
-    stmt = text("UPDATE Room_Bookings SET Status=0 WHERE Booking_ID='"+str(id)+"'")
-    db.session.execute(stmt)
-    db.session.commit()
-    return redirect('/roomadmissions')
+    if check_session()["Logged_In"] != False and check_session()["Role"] != "Patient":
+        stmt = text("UPDATE Room_Bookings SET Status=0 WHERE Booking_ID='"+str(id)+"'")
+        db.session.execute(stmt)
+        db.session.commit()
+        return redirect('/roomadmissions')
 
 
 
