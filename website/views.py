@@ -1,8 +1,10 @@
 ##routes for website
 import sqlalchemy
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify, make_response
 from . import db
 import json
+import pdfkit
+
 
 from .models import Patient, Appointment, Specification, Role, HospitalStaff, AvailabilitySchedule,SystemConfig,TimeSlot, Room, Prescription,PrescriptionContent,RoomBooking,Medicine, Diagnose, Disease, InvoiceRecord, Payment, Invoice
 
@@ -924,31 +926,62 @@ def profile():
 @views.route('/editpatientdetail/<id>', methods=['GET', 'POST'])
 def editpatientdetail(id):
     print("id is : ", id)
-    if 'username' not in session:
-        editpat = Patient.query.filter_by(Patient_ID=id)
-
-        if request.method == 'POST':
-            print("inside editpat post mtd")
-            name = request.form['name']
-            surname = request.form['surname']
-            birthdate = request.form['Birthdate']
-            phonenumber = request.form['phonenumber']
-            address = request.form['address']
-            # state = request.form['state']
-            city = request.form['city']
-            # status = request.form['status']
-            row_update = Patient.query.filter_by(Patient_ID=id).update(
-                dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
-            db.session.commit()
-            print("Roww update", row_update)
-
-            if row_update == None:
-                flash('Something Went Wrong')
-                return redirect(url_for('update_patient'))
-            else:
-                flash('Patient update initiated successfully')
-                return redirect(url_for('views.home'))
-
-        else:
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
+        if 'username' not in session:
             editpat = Patient.query.filter_by(Patient_ID=id)
-        return render_template('editpatientdetail.html', editpat=editpat)
+
+            if request.method == 'POST':
+                print("inside editpat post mtd")
+                name = request.form['name']
+                surname = request.form['surname']
+                birthdate = request.form['Birthdate']
+                phonenumber = request.form['phonenumber']
+                address = request.form['address']
+                # state = request.form['state']
+                city = request.form['city']
+                # status = request.form['status']
+                row_update = Patient.query.filter_by(Patient_ID=id).update(
+                    dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
+                db.session.commit()
+                print("Roww update", row_update)
+
+                if row_update == None:
+                    flash('Something Went Wrong')
+                    return redirect(url_for('update_patient'))
+                else:
+                    flash('Patient update initiated successfully')
+                    return redirect(url_for('views.home'))
+
+            else:
+                editpat = Patient.query.filter_by(Patient_ID=id)
+            return render_template('editpatientdetail.html', editpat=editpat)
+
+
+@views.route('/pdf_export', methods=['GET'])
+def pdf_export():
+
+    inv_no = request.args.get("Invoice_Number")
+    invoice = Invoice.query.filter_by(Invoice_Number=inv_no).first()
+    if invoice:
+        invoice_records = InvoiceRecord.query.filter_by(Invoice_Number=inv_no).all()
+        patient_info = {"name" : "", "address": "", "email" : ""}
+        patient_info.update({"name" : invoice.Patient.Name + " " + invoice.Patient.Surname,
+                             "address" : str(invoice.Patient.City),
+                             "email" : invoice.Patient.E_Mail
+                             })
+
+        total_amount =  0
+        for record in invoice_records:
+            total_amount += record.Amount
+        total_paid = 0
+
+        payments = Payment.query.filter_by(Invoice_Number = inv_no).all()
+        for payment in payments:
+            total_paid += payment.Payment_Amount
+        rendered = render_template('invoice_template.html', invoice = invoice, records = invoice_records, patient = patient_info, total_amount = total_amount, total_paid = total_paid)
+        pdf = pdfkit.from_string(rendered, False)
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = 'attachment; filename = '+invoice.Patient.Name+ invoice.Patient.Surname+'Invoice'+inv_no+'.PDF'
+
+        return response

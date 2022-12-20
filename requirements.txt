@@ -3,3 +3,5 @@ flask_sqlalchemy
 flask_login
 PyMySQL
 gunicorn
+pdfkit
+wkhtmltopdf
