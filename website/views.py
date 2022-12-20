@@ -723,8 +723,7 @@ def dischargeadmission(id):
 # Update Database Record
 @views.route('/editpatientdetail/<id>', methods=['GET', 'POST'])
 def editpatientdetail(id):
-    if 'username' not in session:
-        editpat = Patient.query.filter_by(Patient_ID=id)
+    if check_session()["Logged_In"] != False and check_session()["Role"] == "Patient":
 
         if request.method == 'POST':
             name = request.form['name']
@@ -734,7 +733,7 @@ def editpatientdetail(id):
             address = request.form['address']
             city = request.form['city']
             row_update = Patient.query.filter_by(Patient_ID=id).update(
-                dict(Name=name, Surname=surname, Birthdate=birthdate,Phone_Number=phonenumber, Address=address, City=city))
+                dict(Name=name, Surname=surname, Birthdate=birthdate, Phone_Number=phonenumber, Address=address, City=city))
             db.session.commit()
 
             if row_update == None:
@@ -745,5 +744,8 @@ def editpatientdetail(id):
                 return redirect(url_for('views.home'))
 
         else:
-            editpat = Patient.query.filter_by(Patient_ID=id)
+              editpat = Patient.query.filter_by(Patient_ID=id)
         return render_template('editpatientdetail.html', editpat=editpat)
+
+    return redirect(url_for('views.home'))
+
